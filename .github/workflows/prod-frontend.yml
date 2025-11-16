@@ -1,5 +1,4 @@
 name: Deploy Prod Frontend
-
 on:
   push:
     branches: [ prod ]
@@ -9,21 +8,27 @@ jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Install deps and build frontend
         run: |
-          npm ci
+          npm install
           npm run build
         working-directory: frontend
 
-      - name: Copy Frontend to VPS
+      - name: Ensure target dir exists
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PROD_SERVER_HOST }}
+          username: ${{ secrets.PROD_SERVER_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY_NO_PHRASE }}
+          script: |
+            mkdir -p /var/www/html/vitalinfo/frontend
+
+      - name: Copy Frontend to VPS (scp)
         uses: appleboy/scp-action@v0.1.6
         with:
           host: ${{ secrets.PROD_SERVER_HOST }}
