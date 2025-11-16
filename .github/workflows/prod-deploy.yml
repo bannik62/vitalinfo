@@ -22,17 +22,17 @@ jobs:
         with:
           switches: -az --delete
           path: ./
-          remote_path: ${{ secrets.DEPLOY_PATH }}
-          remote_host: ${{ secrets.VPS_HOST }}
-          remote_user: ${{ secrets.VPS_USER }}
-          remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          remote_path: ${{ secrets.DEPLOY_PATH_VITALINFO }}
+          remote_host: ${{ secrets.VPS_HOST_VITALINFO  }}
+          remote_user: ${{ secrets.VPS_USER_VITALINFO  }}
+          remote_key: ${{ secrets.SSH_PRIVATE_KEY_VITALINFO  }}
 
       - name: Post-deploy (restart service)
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          host: ${{ secrets.VPS_HOST_VITALINFO  }}
+          username: ${{ secrets.VPS_USER_VITALINFO  }}
+          key: ${{ secrets.SSH_PRIVATE_KEY_VITALINFO  }}
           script: |
             cd "${{ secrets.DEPLOY_PATH }}"
             ${{ secrets.SERVICE_RESTART_CMD }}
