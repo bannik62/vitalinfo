@@ -30,7 +30,7 @@
     message = '';
     
     try {
-      const response = await axios.post('http://localhost:3002/api/board', {
+      const response = await axios.post('/api/board', {
         titre,
         description
       }, {

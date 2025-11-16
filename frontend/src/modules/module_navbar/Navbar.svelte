@@ -15,7 +15,7 @@
   async function logout() {
     try {
       // Appel à un endpoint de déconnexion si présent, sinon on supprime juste le cookie côté client
-      await axios.post('http://localhost:3002/api/auth/logout', {}, {
+      await axios.post('/api/auth/logout', {}, {
         withCredentials: true
       });
       // Redirection après déconnexion
