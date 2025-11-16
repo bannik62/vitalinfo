@@ -7,7 +7,7 @@
 
   async function getCsrfToken() {
     try {
-      const response = await axios.get('http://localhost:3002/api/auth/csrf-token', {
+      const response = await axios.get('/api/auth/csrf-token', {
         withCredentials: true
       });
       
