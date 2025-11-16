@@ -1,0 +1,29 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+
+# Builds
+dist/
+build/
+.vite/
+.svelte-kit/
+coverage/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# OS / Editor
+.DS_Store
+*.swp
+.vscode/
+.idea/
+
+# Docker
+*.local.yml
+docker-data/
