@@ -1,0 +1,33 @@
+name: Deploy Prod Backend
+on:
+  push:
+    branches: [ prod ]
+  workflow_dispatch:
+
+jobs:
+  deploy-backend:
+    environment: vitalinfo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ensure backend dir exists
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST_VITALINFO }}
+          username: ${{ secrets.PROD_SERVER_USER_VITALINFO }}
+          key: ${{ secrets.DEPLOY_SSH_KEY_NO_PHRASE_VITALINFO }}
+          script: |
+            mkdir -p "${{ secrets.DEPLOY_PATH_VITALINFO }}/backend"
+
+      - name: Copy Backend to VPS (scp)
+        uses: appleboy/scp-action@v0.1.6
+        with:
+          host: ${{ secrets.VPS_HOST_VITALINFO }}
+          username: ${{ secrets.PROD_SERVER_USER_VITALINFO }}
+          key: ${{ secrets.DEPLOY_SSH_KEY_NO_PHRASE_VITALINFO }}
+          port: 22
+          source: "backend/**"
+          target: "${{ secrets.DEPLOY_PATH_VITALINFO }}/backend"
+          strip_components: 1
+          rm: false
