@@ -31,3 +31,14 @@ jobs:
           target: "${{ secrets.DEPLOY_PATH_VITALINFO }}/backend"
           strip_components: 1
           rm: false
+
+      - name: Copy docker-compose to VPS (scp)
+        uses: appleboy/scp-action@v0.1.6
+        with:
+          host: ${{ secrets.VPS_HOST_VITALINFO }}
+          username: ${{ secrets.PROD_SERVER_USER_VITALINFO }}
+          key: ${{ secrets.DEPLOY_SSH_KEY_NO_PHRASE_VITALINFO }}
+          port: 22
+          source: "docker-compose.yml"
+          target: "${{ secrets.DEPLOY_PATH_VITALINFO }}"
+          rm: false
