@@ -34,7 +34,7 @@
     message = '';
     
     try {
-      const response = await axios.post('http://localhost:3000/api/auth/login', {
+      const response = await axios.post('http://localhost:3002/api/auth/login', {
         email,
         password
       }, {
