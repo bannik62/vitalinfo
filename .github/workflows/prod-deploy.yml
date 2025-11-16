@@ -1,0 +1,38 @@
+name: Prod Deploy
+
+on:
+  push:
+    branches: [ prod ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Optionnel: build frontend si tu veux déployer les assets compilés
+      # - uses: actions/setup-node@v4
+      #   with: { node-version: '20' }
+      # - run: npm ci && npm run build
+      #   working-directory: frontend
+
+      - name: Upload project to VPS (rsync over SSH)
+        uses: burnett01/rsync-deployments@5.2
+        with:
+          switches: -az --delete
+          path: ./
+          remote_path: ${{ secrets.DEPLOY_PATH_VITALINFO }}
+          remote_host: ${{ secrets.VPS_HOST_VITALINFO  }}
+          remote_user: ${{ secrets.VPS_USER_VITALINFO  }}
+          remote_key: ${{ secrets.SSH_PRIVATE_KEY_VITALINFO  }}
+
+      - name: Post-deploy (restart service)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST_VITALINFO  }}
+          username: ${{ secrets.VPS_USER_VITALINFO  }}
+          key: ${{ secrets.SSH_PRIVATE_KEY_VITALINFO  }}
+          script: |
+            cd "${{ secrets.DEPLOY_PATH }}"
+            ${{ secrets.SERVICE_RESTART_CMD }}

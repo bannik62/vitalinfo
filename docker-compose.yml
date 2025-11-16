@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: vitalinfo-backend
     ports:
-      - "3000:3000"
+      - "3002:3000"
     environment:
       - NODE_ENV=production
       - PORT=3000
@@ -24,7 +24,7 @@ services:
     image: mysql:8.0
     container_name: vitalinfo-mysql
     ports:
-      - "3306:3306"
+      - "3307:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=Superyoyo62**sql**vitalinfo
       - MYSQL_DATABASE=vitalinfo
