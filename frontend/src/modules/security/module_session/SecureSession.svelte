@@ -11,7 +11,7 @@
     isAuthenticated = false;
     
     try {
-      const response = await axios.get('http://localhost:3000/api/auth/verify', {
+      const response = await axios.get('/api/auth/verify', {
         withCredentials: true,
         validateStatus: function (status) {
           // Rejeter seulement les erreurs serveur (>= 500)

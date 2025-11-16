@@ -25,7 +25,7 @@
 <!-- Composant invisible pour vérifier la session -->
 <SecureSession on:sessionChecked={handleSessionChecked} />
 
-<div class="debug">Loading: {loading}, Auth: {isAuthenticated}</div>
+ 
 
 {#if loading}
   <div class="loading">Chargement...</div>
@@ -44,15 +44,5 @@
     font-size: 18px;
   }
   
-  .debug {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 10px;
-    border-radius: 5px;
-    font-size: 12px;
-    z-index: 9999;
-  }
+ 
 </style>

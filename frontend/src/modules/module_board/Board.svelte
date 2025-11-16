@@ -1,7 +1,7 @@
 <script>
   import axios from 'axios';
   import Securecsrf from '../security/module_csrf/Securecsrf.svelte';
-  
+  import Navbar from '../module_navbar/Navbar.svelte';
   let titre = '';
   let description = '';
   let loading = false;
@@ -30,7 +30,7 @@
     message = '';
     
     try {
-      const response = await axios.post('http://localhost:3000/api/board', {
+      const response = await axios.post('/api/board', {
         titre,
         description
       }, {
@@ -54,6 +54,8 @@
 
 <!-- Composant invisible pour récupérer le token CSRF -->
 <Securecsrf on:csrfTokenReceived={handleCsrfTokenReceived} />
+
+<Navbar />
 
 <div class="board-container">
   <div class="board-card">
