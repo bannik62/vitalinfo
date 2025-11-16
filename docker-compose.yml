@@ -44,8 +44,6 @@ services:
     environment:
       - PMA_HOST=mysql
       - PMA_PORT=${MYSQL_CONTAINER_PORT}
-      - PMA_USER=root
-      - PMA_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     restart: unless-stopped
     networks:
