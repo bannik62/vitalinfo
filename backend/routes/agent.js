@@ -38,8 +38,7 @@ const assertN8NSecret = (req, res, next) => {
 };
 
 const handleUpload = (req, res, next) => {
-  const middleware = upload.single('file');
-  middleware(req, res, (err) => {
+  upload.single('file')(req, res, (err) => {
     if (err) {
       if (err.code === 'LIMIT_FILE_SIZE') {
         return res
@@ -165,10 +164,10 @@ router.post('/docs/result', assertN8NSecret, (req, res) => {
   return res.json({ success: true });
 });
 
-router.get('/docs/latest', authenticateToken, async (req, res) => {
+router.get('/docs/latest', authenticateToken, (req, res) => {
   const userId = req.user?.id || 'global';
-  const docs = docResultsStore.get(userId) || [];
-  return res.json({ documents: docs });
+  const documents = docResultsStore.get(userId) || [];
+  return res.json({ documents });
 });
 
 export default router;

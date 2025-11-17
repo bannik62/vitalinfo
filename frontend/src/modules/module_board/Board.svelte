@@ -240,7 +240,7 @@
     {#if docsLoading && docs.length === 0}
       <div class="docs-placeholder">Chargement des documents…</div>
     {:else if docs.length === 0}
-      <div class="docs-placeholder">Aucun document reçu pour l’instant.</div>
+      <div class="docs-placeholder">Aucun document reçu pour l'instant.</div>
     {:else}
       <ul class="docs-list">
         {#each docs as doc, index (doc.id || doc.receivedAt || doc.suggested_filename || index)}
