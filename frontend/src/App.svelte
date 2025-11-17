@@ -29,20 +29,39 @@
 
 {#if loading}
   <div class="loading">Chargement...</div>
-{:else if isAuthenticated}
-  <Board />
-{:else}
-  <PageLogin />
+  {:else}
+    <main>
+      {#if isAuthenticated}
+        <Board />
+      {:else}
+        <PageLogin />
+      {/if}
+    </main>
 {/if}
-
 <style>
   .loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    height: 10vh;
     font-size: 18px;
+    background-color: #ede4e4;
   }
-  
+
+  main {
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height:100%;
+  }
+  @media (max-width: 575.98px) {
+    main {
+    }
+  }
  
 </style>

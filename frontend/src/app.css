@@ -12,5 +12,13 @@ body {
 }
 
 #app {
-  min-height: 100vh;
+ height: 100vh;
 }
+
+@media (max-width: 575.98px) {
+  #app {
+    height: 200vh;
+  }
+}
+
+
