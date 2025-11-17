@@ -1,5 +1,5 @@
 <script>
-  import { onDestroy } from 'svelte';
+  import { onDestroy, afterUpdate } from 'svelte';
   import axios from 'axios';
   import Securecsrf from '../security/module_csrf/Securecsrf.svelte';
   import Navbar from '../module_navbar/Navbar.svelte';
@@ -18,6 +18,7 @@
   let chatLoading = false;
   let chatMessage = '';
   let chatHistory = [];
+  let chatHistoryContainer;
 
   // Documents
   let docs = [];
@@ -120,6 +121,7 @@
       };
       chatHistory = [...chatHistory, agentReply];
       chatInput = '';
+      scrollToBottom();
     } catch (error) {
       chatMessage =
         error.response?.data?.error ||
@@ -239,6 +241,22 @@
     }
   }
 
+  // Fonction pour scroller vers le bas du chat
+  function scrollToBottom() {
+    if (chatHistoryContainer) {
+      setTimeout(() => {
+        chatHistoryContainer.scrollTop = chatHistoryContainer.scrollHeight;
+      }, 100);
+    }
+  }
+
+  // Scroller automatiquement quand chatHistory change
+  afterUpdate(() => {
+    if (chatHistory.length > 0) {
+      scrollToBottom();
+    }
+  });
+
   // Nettoyer le polling quand le composant est détruit
   onDestroy(() => {
     stopPollingForNewDoc();
@@ -280,16 +298,16 @@
 
     <section class="board-card chat-card">
       <h2>Chat avec l’agent IA</h2>
-      <div class="chat-history">
+      <div bind:this={chatHistoryContainer} class="chat-history">
         {#if chatHistory.length === 0}
           <div class="chat-placeholder">
-            Posez une question après l’envoi d’un document pour interroger l’agent IA.
+            Posez une question après l'envoi d'un document pour interroger l'agent IA.
           </div>
         {:else}
           {#each chatHistory as item, index (index)}
             <div class="chat-message {item.from === 'Vous' ? 'from-user' : 'from-agent'}">
               <div class="sender">{item.from}</div>
-              <p>{item.text}</p>
+              <p class="chat-text">{item.text}</p>
             </div>
           {/each}
         {/if}
@@ -519,6 +537,11 @@
   .chat-message p {
     margin: 0;
     line-height: 1.4;
+  }
+
+  .chat-text {
+    white-space: pre-wrap;
+    word-wrap: break-word;
   }
 
   .chat-message.from-user {
