@@ -241,6 +241,17 @@
     }
   }
 
+  // Fonction pour convertir les URLs en liens cliquables
+  function formatMessageWithLinks(text) {
+    if (!text) return text;
+    
+    // Regex pour détecter les URLs http/https
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    
+    // Remplacer les URLs par des balises <a>
+    return text.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer" class="chat-link">$1</a>');
+  }
+
   // Fonction pour scroller vers le bas du chat
   let shouldAutoScroll = true;
   let previousHistoryLength = 0;
@@ -318,7 +329,7 @@
           {#each chatHistory as item, index (index)}
             <div class="chat-message {item.from === 'Vous' ? 'from-user' : 'from-agent'}">
               <div class="sender">{item.from}</div>
-              <p class="chat-text">{item.text}</p>
+              <p class="chat-text">{@html formatMessageWithLinks(item.text)}</p>
             </div>
           {/each}
         {/if}
@@ -553,6 +564,17 @@
   .chat-text {
     white-space: pre-wrap;
     word-wrap: break-word;
+  }
+
+  .chat-text :global(.chat-link) {
+    color: #60a5fa;
+    text-decoration: underline;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+
+  .chat-text :global(.chat-link:hover) {
+    color: #93c5fd;
   }
 
   .chat-message.from-user {
