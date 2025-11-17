@@ -59,9 +59,6 @@
     width: 100%;
     height:100%;
   }
-  @media (max-width: 575.98px) {
-    main {
-    }
-  }
+
  
 </style>
