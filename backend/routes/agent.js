@@ -147,6 +147,9 @@ router.post(
       });
     } catch (error) {
       console.error('Erreur lors de la requête chat n8n:', error.message);
+      console.error('Status code:', error.response?.status);
+      console.error('Response data:', error.response?.data);
+      console.error('Response headers:', error.response?.headers);
       return res.status(502).json({
         error:
           "L'agent IA est indisponible. Veuillez réessayer dans quelques instants."
