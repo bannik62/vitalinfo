@@ -242,20 +242,31 @@
   }
 
   // Fonction pour scroller vers le bas du chat
+  let shouldAutoScroll = true;
+  let previousHistoryLength = 0;
+
   function scrollToBottom() {
-    if (chatHistoryContainer) {
+    if (chatHistoryContainer && shouldAutoScroll) {
       setTimeout(() => {
         chatHistoryContainer.scrollTop = chatHistoryContainer.scrollHeight;
       }, 100);
     }
   }
 
-  // Scroller automatiquement quand chatHistory change
-  afterUpdate(() => {
-    if (chatHistory.length > 0) {
-      scrollToBottom();
+  // Détecter si l'utilisateur scroll manuellement
+  function handleChatScroll() {
+    if (chatHistoryContainer) {
+      const { scrollTop, scrollHeight, clientHeight } = chatHistoryContainer;
+      // Si l'utilisateur est proche du bas (à 50px près), réactiver l'auto-scroll
+      shouldAutoScroll = scrollHeight - scrollTop - clientHeight < 50;
     }
-  });
+  }
+
+  // Scroller seulement quand un nouveau message est ajouté
+  $: if (chatHistory.length > previousHistoryLength) {
+    previousHistoryLength = chatHistory.length;
+    scrollToBottom();
+  }
 
   // Nettoyer le polling quand le composant est détruit
   onDestroy(() => {
@@ -298,7 +309,7 @@
 
     <section class="board-card chat-card">
       <h2>Chat avec l’agent IA</h2>
-      <div bind:this={chatHistoryContainer} class="chat-history">
+      <div bind:this={chatHistoryContainer} class="chat-history" on:scroll={handleChatScroll}>
         {#if chatHistory.length === 0}
           <div class="chat-placeholder">
             Posez une question après l'envoi d'un document pour interroger l'agent IA.
