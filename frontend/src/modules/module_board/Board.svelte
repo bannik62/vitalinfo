@@ -199,7 +199,7 @@
             Posez une question après l’envoi d’un document pour interroger l’agent IA.
           </div>
         {:else}
-          {#each chatHistory as item}
+          {#each chatHistory as item, index (index)}
             <div class="chat-message {item.from === 'Vous' ? 'from-user' : 'from-agent'}">
               <div class="sender">{item.from}</div>
               <p>{item.text}</p>
@@ -243,14 +243,13 @@
       <div class="docs-placeholder">Aucun document reçu pour l’instant.</div>
     {:else}
       <ul class="docs-list">
-        {#each docs as doc}
+        {#each docs as doc, index (doc.id || doc.receivedAt || doc.suggested_filename || index)}
           <li>
             <div class="doc-row">
               <div>
                 <div class="doc-title">{doc.suggested_filename || doc.original_name}</div>
                 <div class="doc-meta">
-                  {doc.issuer || 'Source inconnue'} — {doc.category || 'catégorie'} —{' '}
-                  {doc.document_date ?? 'date inconnue'}
+                  {doc.issuer || 'Source inconnue'} — {doc.category || 'catégorie'} — {doc.document_date ?? 'date inconnue'}
                 </div>
                 {#if doc.tldr}
                   <div class="doc-tldr">{doc.tldr}</div>
