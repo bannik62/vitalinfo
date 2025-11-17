@@ -18,7 +18,9 @@ const N8N_UPLOAD_URL =
   process.env.N8N_UPLOAD_URL ||
   'https://n8n.codeurbase.fr/form/45380310-7a67-46af-a865-708ff84eb2af';
 
-const N8N_CHAT_URL = process.env.N8N_CHAT_URL || '';
+const N8N_CHAT_URL =
+  process.env.N8N_CHAT_URL ||
+  'https://n8n.codeurbase.fr/webhook/5c74d0d8-ce40-464d-a0ad-c60fc65555a0/chat';
 const N8N_WEBHOOK_SECRET = process.env.N8N_WEBHOOK_SECRET || '';
 
 const docResultsStore = new Map();
