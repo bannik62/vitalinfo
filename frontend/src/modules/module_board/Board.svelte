@@ -136,6 +136,14 @@
       }
     }
 
+    // Construire l'URL publique Supabase si binary_reference existe mais pas publicUrl
+    if (clone.binary_reference && !clone.binary_reference.publicUrl) {
+      const { bucket, key } = clone.binary_reference;
+      if (bucket && key) {
+        clone.binary_reference.publicUrl = `https://zuvzpcfrbheqeqbiottv.supabase.co/storage/v1/object/public/${bucket}/${key}`;
+      }
+    }
+
     return clone;
   }
 
