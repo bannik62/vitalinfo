@@ -140,7 +140,9 @@
     if (clone.binary_reference && !clone.binary_reference.publicUrl) {
       const { bucket, key } = clone.binary_reference;
       if (bucket && key) {
-        clone.binary_reference.publicUrl = `https://zuvzpcfrbheqeqbiottv.supabase.co/storage/v1/object/public/${bucket}/${key}`;
+        // Si key commence déjà par bucket/, utiliser key directement, sinon ajouter bucket/
+        const path = key.startsWith(`${bucket}/`) ? key : `${bucket}/${key}`;
+        clone.binary_reference.publicUrl = `https://zuvzpcfrbheqeqbiottv.supabase.co/storage/v1/object/public/${path}`;
       }
     }
 
