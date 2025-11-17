@@ -31,6 +31,9 @@ const assertN8NSecret = (req, res, next) => {
       .json({ error: 'Le secret N8N_WEBHOOK_SECRET est manquant côté serveur.' });
   }
   const headerSecret = req.headers['x-n8n-secret'];
+  console.log('🔐 Secret reçu dans header:', JSON.stringify(headerSecret));
+  console.log('🔐 Secret attendu:', JSON.stringify(N8N_WEBHOOK_SECRET));
+  console.log('🔐 Correspondance:', headerSecret === N8N_WEBHOOK_SECRET);
   if (!headerSecret || headerSecret !== N8N_WEBHOOK_SECRET) {
     return res.status(401).json({ error: 'Accès non autorisé.' });
   }
@@ -70,6 +73,11 @@ router.post(
       filename: req.file.originalname,
       contentType: req.file.mimetype
     });
+    
+    // Envoyer le userId à n8n pour qu'il puisse le renvoyer avec les résultats
+    const userId = req.user?.id || 'global';
+    formData.append('userId', userId);
+    formData.append('userEmail', req.user?.email || '');
 
     try {
       await axios.post(N8N_UPLOAD_URL, formData, {
@@ -146,12 +154,22 @@ router.post(
 );
 
 router.post('/docs/result', assertN8NSecret, (req, res) => {
+  console.log('🔵 Route /docs/result appelée');
+  console.log('🔵 Headers reçus:', JSON.stringify(req.headers, null, 2));
+  console.log('🔵 Body brut:', req.body);
+  console.log('🔵 Type de body:', typeof req.body);
+  console.log('🔵 Body stringifié:', JSON.stringify(req.body, null, 2));
+  
   const payload = req.body;
   if (!payload || Object.keys(payload).length === 0) {
+    console.log('❌ Payload vide ou invalide');
     return res.status(400).json({ error: 'Payload vide reçu.' });
   }
 
   const userId = payload.userId || 'global';
+  console.log('📥 Document reçu de n8n pour userId:', userId);
+  console.log('📄 Données reçues:', JSON.stringify(payload, null, 2));
+  
   const previous = docResultsStore.get(userId) || [];
   const newEntry = {
     ...payload,
@@ -160,13 +178,16 @@ router.post('/docs/result', assertN8NSecret, (req, res) => {
 
   const updated = [newEntry, ...previous].slice(0, MAX_RESULTS_PER_USER);
   docResultsStore.set(userId, updated);
+  console.log('✅ Document stocké. Total pour userId:', userId, '=', updated.length);
 
   return res.json({ success: true });
 });
 
 router.get('/docs/latest', authenticateToken, (req, res) => {
   const userId = req.user?.id || 'global';
+  console.log('📤 Récupération documents pour userId:', userId);
   const documents = docResultsStore.get(userId) || [];
+  console.log('📚 Documents trouvés:', documents.length);
   return res.json({ documents });
 });
 
