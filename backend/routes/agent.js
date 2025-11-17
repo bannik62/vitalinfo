@@ -142,8 +142,14 @@ router.post(
         }
       );
 
+      // Log pour debug : voir ce que n8n retourne exactement
+      console.log('📥 Réponse complète de n8n:', JSON.stringify(response.data, null, 2));
+      console.log('📥 response.data.answer:', response.data?.answer);
+      console.log('📥 Type de response.data:', typeof response.data);
+      console.log('📥 Clés dans response.data:', Object.keys(response.data || {}));
+
       return res.json({
-        answer: response.data?.answer || 'Réponse reçue de l’agent IA.'
+        answer: response.data?.answer || "Réponse reçue de l'agent IA."
       });
     } catch (error) {
       console.error('Erreur lors de la requête chat n8n:', error.message);
