@@ -43,7 +43,7 @@ jobs:
           target: "${{ secrets.DEPLOY_PATH_VITALINFO }}"
           rm: false
 
-      - name: Rebuild and restart backend with .env
+      - name: Rebuild and restart backend
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST_VITALINFO }}
@@ -52,4 +52,4 @@ jobs:
           script: |
             cd "${{ secrets.DEPLOY_PATH_VITALINFO }}"
             docker-compose build backend
-            docker-compose --env-file .env up -d backend
+            docker-compose up -d backend
