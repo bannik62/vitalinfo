@@ -184,7 +184,8 @@ router.post('/docs/result', assertN8NSecret, (req, res) => {
 });
 
 router.get('/docs/latest', authenticateToken, (req, res) => {
-  const userId = req.user?.id || 'global';
+  // Utiliser toujours 'global' pour correspondre avec les données envoyées par n8n
+  const userId = 'global';
   console.log('📤 Récupération documents pour userId:', userId);
   const documents = docResultsStore.get(userId) || [];
   console.log('📚 Documents trouvés:', documents.length);
