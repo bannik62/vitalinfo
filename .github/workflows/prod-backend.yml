@@ -51,5 +51,5 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY_NO_PHRASE_VITALINFO }}
           script: |
             cd "${{ secrets.DEPLOY_PATH_VITALINFO }}"
-            docker-compose build backend
-            docker-compose up -d backend
+            sudo docker-compose build backend
+            sudo docker-compose up -d backend
