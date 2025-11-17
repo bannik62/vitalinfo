@@ -197,5 +197,50 @@ router.get('/docs/latest', authenticateToken, (req, res) => {
   return res.json({ documents });
 });
 
+// Route pour sauvegarder les préférences utilisateur (habitudes) dans PostgreSQL
+router.post('/user/preferences', assertN8NSecret, async (req, res) => {
+  const { user_id, preference_key, preference_value } = req.body;
+
+  if (!user_id || !preference_key || !preference_value) {
+    return res.status(400).json({ 
+      error: 'user_id, preference_key et preference_value sont requis.' 
+    });
+  }
+
+  try {
+    // Import dynamique de pg (CommonJS)
+    const pg = await import('pg');
+    const { Client } = pg.default;
+
+    const pgClient = new Client({
+      host: process.env.PG_HOST || 'umami_database_codeurbase',
+      port: process.env.PG_PORT || 5432,
+      database: 'vitalinfo_memory',
+      user: process.env.PG_USER || 'umami',
+      password: process.env.PG_PASSWORD || 'umami'
+    });
+
+    await pgClient.connect();
+
+    const query = `
+      INSERT INTO user_preferences (user_id, preference_key, preference_value, created_at, updated_at)
+      VALUES ($1, $2, $3, NOW(), NOW())
+      ON CONFLICT (user_id, preference_key) 
+      DO UPDATE SET 
+        preference_value = EXCLUDED.preference_value, 
+        updated_at = NOW();
+    `;
+
+    await pgClient.query(query, [user_id, preference_key, preference_value]);
+    await pgClient.end();
+
+    console.log('✅ Préférence sauvegardée:', { user_id, preference_key, preference_value });
+    return res.json({ success: true, message: 'Préférence sauvegardée' });
+  } catch (error) {
+    console.error('❌ Erreur lors de la sauvegarde de la préférence:', error);
+    return res.status(500).json({ error: 'Erreur lors de la sauvegarde' });
+  }
+});
+
 export default router;
 
