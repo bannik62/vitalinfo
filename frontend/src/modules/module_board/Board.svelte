@@ -1,4 +1,5 @@
 <script>
+  import { onDestroy } from 'svelte';
   import axios from 'axios';
   import Securecsrf from '../security/module_csrf/Securecsrf.svelte';
   import Navbar from '../module_navbar/Navbar.svelte';
@@ -10,6 +11,7 @@
   let uploadLoading = false;
   let uploadMessage = '';
   let uploadMessageType = '';
+  let fileInput;
 
   // Chat
   let chatInput = '';
@@ -21,6 +23,8 @@
   let docs = [];
   let docsLoading = false;
   let docsError = '';
+  let pollingInterval = null;
+  let initialDocsCount = 0;
 
   function handleCsrfTokenReceived(event) {
     csrfToken = event.detail;
@@ -64,7 +68,16 @@
       uploadMessage = 'Document transmis à n8n. Traitement en cours…';
       uploadMessageType = 'success';
       selectedFile = null;
-      await fetchLatestDocs();
+      // Réinitialiser l'input file
+      if (fileInput) {
+        fileInput.value = '';
+      }
+      
+      // Sauvegarder le nombre initial de documents
+      initialDocsCount = docs.length;
+      
+      // Démarrer le polling pour vérifier les nouveaux documents
+      startPollingForNewDoc();
     } catch (error) {
       uploadMessage =
         error.response?.data?.error || "Erreur lors de l'envoi du document.";
@@ -157,7 +170,16 @@
         withCredentials: true
       });
       const docsRaw = response.data?.documents || [];
-      docs = docsRaw.map((doc) => normalizeDoc(doc));
+      const newDocs = docsRaw.map((doc) => normalizeDoc(doc));
+      
+      // Vérifier si un nouveau document est arrivé
+      if (uploadMessage && newDocs.length > initialDocsCount) {
+        uploadMessage = '';
+        uploadMessageType = '';
+        stopPollingForNewDoc();
+      }
+      
+      docs = newDocs;
     } catch (error) {
       docsError =
         error.response?.data?.error ||
@@ -166,6 +188,61 @@
       docsLoading = false;
     }
   }
+
+  function startPollingForNewDoc() {
+    // Arrêter le polling précédent s'il existe
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+    }
+    
+    // Poller toutes les 3 secondes (sans afficher le loader)
+    pollingInterval = setInterval(async () => {
+      await fetchLatestDocsSilently();
+    }, 3000);
+    
+    // Arrêter après 2 minutes maximum
+    setTimeout(() => {
+      stopPollingForNewDoc();
+      if (uploadMessage) {
+        uploadMessage = '';
+        uploadMessageType = '';
+      }
+    }, 120000);
+  }
+
+  async function fetchLatestDocsSilently() {
+    try {
+      const response = await axios.get('/api/docs/latest', {
+        withCredentials: true
+      });
+      const docsRaw = response.data?.documents || [];
+      const newDocs = docsRaw.map((doc) => normalizeDoc(doc));
+      
+      // Vérifier si un nouveau document est arrivé
+      if (uploadMessage && newDocs.length > initialDocsCount) {
+        uploadMessage = '';
+        uploadMessageType = '';
+        stopPollingForNewDoc();
+      }
+      
+      docs = newDocs;
+    } catch (error) {
+      // En cas d'erreur silencieuse, on ne fait rien
+      console.error('Erreur lors du polling:', error);
+    }
+  }
+
+  function stopPollingForNewDoc() {
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+      pollingInterval = null;
+    }
+  }
+
+  // Nettoyer le polling quand le composant est détruit
+  onDestroy(() => {
+    stopPollingForNewDoc();
+  });
 </script>
 
 <Securecsrf on:csrfTokenReceived={handleCsrfTokenReceived} />
@@ -183,7 +260,7 @@
 
       <div class="upload-body">
         <label class="file-label">
-          <input type="file" accept="application/pdf" on:change={handleFileChange} />
+          <input bind:this={fileInput} type="file" accept="application/pdf" on:change={handleFileChange} />
           {#if selectedFile}
             <span>{selectedFile.name}</span>
           {:else}
