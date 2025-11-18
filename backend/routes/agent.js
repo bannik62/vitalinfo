@@ -80,22 +80,17 @@ router.post(
     try {
       const formData = new FormData();
       
-      // n8n Form Trigger a besoin que le fichier soit envoyé comme un stream
-      // Créer un stream Readable à partir du buffer
-      const fileStream = new Readable();
-      fileStream.push(req.file.buffer);
-      fileStream.push(null); // Indique la fin du stream
-      
-      // Envoyer le fichier comme un stream avec le nom de fichier
-      formData.append('doc', fileStream, {
+      // n8n Form Trigger - essayer avec le buffer directement
+      // Certaines versions de n8n préfèrent le buffer au stream
+      formData.append('doc', req.file.buffer, {
         filename: req.file.originalname,
         contentType: req.file.mimetype
       });
-      
-      // Envoyer le userId à n8n pour qu'il puisse le renvoyer avec les résultats
-      const userId = req.user?.id || 'global';
-      formData.append('userId', userId);
-      formData.append('userEmail', req.user?.email || '');
+    
+    // Envoyer le userId à n8n pour qu'il puisse le renvoyer avec les résultats
+    const userId = req.user?.id || 'global';
+    formData.append('userId', userId);
+    formData.append('userEmail', req.user?.email || '');
       // Envoyer explicitement le nom du fichier pour que n8n puisse le renvoyer
       // n8n peut utiliser ces champs pour remplir original_name dans sa réponse
       formData.append('fileName', req.file.originalname);
