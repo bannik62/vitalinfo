@@ -71,9 +71,12 @@ router.post(
     }
 
     const formData = new FormData();
+    // Envoyer le fichier avec le nom de champ 'doc' comme configuré dans n8n
+    // Utiliser le buffer directement avec le nom de fichier original
     formData.append('doc', req.file.buffer, {
       filename: req.file.originalname,
-      contentType: req.file.mimetype
+      contentType: req.file.mimetype,
+      knownLength: req.file.size
     });
     
     // Envoyer le userId à n8n pour qu'il puisse le renvoyer avec les résultats
@@ -84,13 +87,32 @@ router.post(
     formData.append('fileName', req.file.originalname);
     formData.append('originalName', req.file.originalname);
 
+    console.log('📤 Envoi fichier à n8n:', {
+      fileName: req.file.originalname,
+      fileSize: req.file.size,
+      mimetype: req.file.mimetype,
+      userId: userId,
+      url: N8N_UPLOAD_URL,
+      bufferLength: req.file.buffer?.length,
+      hasBuffer: !!req.file.buffer
+    });
+    
+    // Vérifier que le FormData contient bien le fichier
+    console.log('📋 FormData fields:', {
+      hasDoc: formData.has('doc'),
+      hasUserId: formData.has('userId'),
+      hasFileName: formData.has('fileName')
+    });
+
     try {
-      await axios.post(N8N_UPLOAD_URL, formData, {
+      const response = await axios.post(N8N_UPLOAD_URL, formData, {
         headers: formData.getHeaders(),
         maxContentLength: Infinity,
         maxBodyLength: Infinity,
         timeout: 30_000
       });
+      
+      console.log('✅ Réponse n8n:', response.status, response.data);
 
       return res.status(202).json({
         success: true,
