@@ -102,13 +102,6 @@ router.post(
         bufferLength: req.file.buffer?.length,
         hasBuffer: !!req.file.buffer
       });
-      
-      // Vérifier que le FormData contient bien le fichier
-      console.log('📋 FormData fields:', {
-        hasDoc: formData.has('doc'),
-        hasUserId: formData.has('userId'),
-        hasFileName: formData.has('fileName')
-      });
 
       const response = await axios.post(N8N_UPLOAD_URL, formData, {
         headers: formData.getHeaders(),
@@ -124,20 +117,53 @@ router.post(
         message: 'Document transmis à n8n pour traitement.'
       });
     } catch (error) {
-      console.error('❌ Erreur lors de la transmission à n8n:', error.message);
-      console.error('❌ Stack:', error.stack);
-      console.error('❌ Status:', error.response?.status);
-      console.error('❌ Response data:', error.response?.data);
+      console.error('❌ Erreur lors de la transmission à n8n:');
+      console.error('  - Message:', error.message);
+      console.error('  - Code:', error.code);
+      console.error('  - Status:', error.response?.status);
+      console.error('  - Response data:', error.response?.data);
+      console.error('  - URL:', N8N_UPLOAD_URL);
       
-      // Si c'est une erreur serveur interne, renvoyer un message plus clair
-      if (error.response?.status >= 500) {
+      // Gérer différents types d'erreurs
+      if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+        console.error('❌ Erreur de connexion: n8n est inaccessible');
         return res.status(502).json({
-          error: "Erreur serveur lors de la transmission à n8n. Veuillez réessayer."
+          error: "Impossible de se connecter à n8n. Vérifiez que le service est accessible."
         });
       }
       
+      if (error.code === 'ETIMEDOUT' || error.message.includes('timeout')) {
+        console.error('❌ Timeout: n8n ne répond pas dans les temps');
+        return res.status(502).json({
+          error: "Timeout: n8n ne répond pas dans les temps impartis."
+        });
+      }
+      
+      if (error.response) {
+        // Erreur HTTP avec réponse
+        const status = error.response.status;
+        const data = error.response.data;
+        
+        if (status >= 500) {
+          return res.status(502).json({
+            error: `Erreur serveur n8n (${status}). Veuillez réessayer plus tard.`
+          });
+        }
+        
+        if (status === 400 || status === 422) {
+          return res.status(400).json({
+            error: data?.error || data?.message || "Format de requête invalide pour n8n."
+          });
+        }
+        
+        return res.status(502).json({
+          error: data?.error || data?.message || `Erreur n8n (${status})`
+        });
+      }
+      
+      // Erreur sans réponse (réseau, etc.)
       return res.status(502).json({
-        error: error.response?.data?.error || "Impossible de transmettre le document à n8n pour le moment."
+        error: "Erreur de communication avec n8n. Veuillez réessayer."
       });
     }
   }
