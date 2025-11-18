@@ -8,6 +8,7 @@
 
   // Upload
   let selectedFile = null;
+  let uploadedFileName = null; // Garder le nom du fichier après l'envoi
   let uploadLoading = false;
   let uploadMessage = '';
   let uploadMessageType = '';
@@ -35,6 +36,7 @@
   function handleFileChange(event) {
     const [file] = event.target.files;
     selectedFile = file;
+    uploadedFileName = null; // Réinitialiser le nom du fichier uploadé
     uploadMessage = '';
   }
 
@@ -68,7 +70,11 @@
 
       uploadMessage = 'Document transmis à n8n. Traitement en cours…';
       uploadMessageType = 'success';
+      
+      // Sauvegarder le nom du fichier avant de réinitialiser
+      uploadedFileName = selectedFile.name;
       selectedFile = null;
+      
       // Réinitialiser l'input file
       if (fileInput) {
         fileInput.value = '';
@@ -178,6 +184,7 @@
       if (uploadMessage && newDocs.length > initialDocsCount) {
         uploadMessage = '';
         uploadMessageType = '';
+        uploadedFileName = null; // Réinitialiser le nom du fichier une fois le document reçu
         stopPollingForNewDoc();
       }
       
@@ -224,6 +231,7 @@
       if (uploadMessage && newDocs.length > initialDocsCount) {
         uploadMessage = '';
         uploadMessageType = '';
+        uploadedFileName = null; // Réinitialiser le nom du fichier une fois le document reçu
         stopPollingForNewDoc();
       }
       
@@ -307,6 +315,8 @@
           <input bind:this={fileInput} type="file" accept="application/pdf" on:change={handleFileChange} />
           {#if selectedFile}
             <span>{selectedFile.name}</span>
+          {:else if uploadedFileName}
+            <span>{uploadedFileName} (en cours de traitement…)</span>
           {:else}
             <span>Sélectionner un fichier PDF</span>
           {/if}
