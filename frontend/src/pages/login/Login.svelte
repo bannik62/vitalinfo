@@ -39,7 +39,9 @@ background: radial-gradient(circle, rgba(2, 0, 36, 1) 0%, rgba(9, 9, 121, 1) 77%
 
     /* Desktop (768px - 1024px) */
     @media (min-width: 768px) and (max-width: 1023.98px) {
-        
+        section {
+            height: 100%;
+        }
     }
 
     /* Large Desktop (1024px - 1440px) */

@@ -246,10 +246,14 @@
     if (!text) return text;
     
     // Regex pour détecter les URLs http/https
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const urlRegex = /(https?:\/\/[^\s<>"']+)/g;
     
-    // Remplacer les URLs par des balises <a>
-    return text.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer" class="chat-link">$1</a>');
+    // Remplacer les URLs par des balises <a> en nettoyant les caractères de ponctuation en fin d'URL
+    return text.replace(urlRegex, (url) => {
+      // Nettoyer les caractères de ponctuation en fin d'URL (., ), ,, ;, :, etc.)
+      const cleanedUrl = url.replace(/[.,;:!?)]+$/, '');
+      return `<a href="${cleanedUrl}" target="_blank" rel="noopener noreferrer" class="chat-link">${cleanedUrl}</a>`;
+    });
   }
 
   // Fonction pour scroller vers le bas du chat
@@ -374,7 +378,7 @@
           <li>
             <div class="doc-row">
               <div>
-                <div class="doc-title">{doc.suggested_filename || doc.original_name}</div>
+                <div class="doc-title">{doc.suggested_filename || doc.original_name || doc.fileName || doc.originalName || 'Document sans nom'}</div>
                 <div class="doc-meta">
                   {doc.issuer || 'Source inconnue'} — {doc.category || 'catégorie'} — {doc.document_date ?? 'date inconnue'}
                 </div>

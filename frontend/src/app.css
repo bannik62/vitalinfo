@@ -12,12 +12,12 @@ body {
 }
 
 #app {
- height: 100vh;
+ height: 100%;
 }
 
 @media (max-width: 575.98px) {
   #app {
-    height: 200vh;
+    height: 100%;
   }
 }
 

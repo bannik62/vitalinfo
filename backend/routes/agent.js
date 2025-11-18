@@ -80,6 +80,9 @@ router.post(
     const userId = req.user?.id || 'global';
     formData.append('userId', userId);
     formData.append('userEmail', req.user?.email || '');
+    // Envoyer explicitement le nom du fichier pour que n8n puisse le renvoyer
+    formData.append('fileName', req.file.originalname);
+    formData.append('originalName', req.file.originalname);
 
     try {
       await axios.post(N8N_UPLOAD_URL, formData, {
