@@ -318,7 +318,7 @@
     @media (max-width: 575.98px) {
         .container-login-form-description {
             margin-top: 10vh;
-            height: 200vh;
+            height: 90%;
         }
         
         .login-form {
@@ -326,7 +326,7 @@
             max-width: 100%;
             min-width: auto;
             margin: 0 10px;
-            height: 25%;
+            height: 23%;
         }
         
         h2 {
@@ -352,7 +352,21 @@
 
     /* Desktop (768px - 1024px) */
     @media (min-width: 768px) and (max-width: 1023.98px) {
-        
+        .container-login-form-description {
+            height: 90%;
+            font-size: 14px;
+        }
+        .container-login-form-description-text {
+            font-size: 14px;
+
+        }
+        .login-form {
+            padding: 10px;
+            max-width: 100%;
+            min-width: auto;
+            margin: 0 10px;
+            height: 23%;
+        }
     }
 
     /* Large Desktop (1024px - 1440px) */
