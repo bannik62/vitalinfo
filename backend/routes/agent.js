@@ -17,7 +17,7 @@ const upload = multer({
 
 const N8N_UPLOAD_URL =
   process.env.N8N_UPLOAD_URL ||
-  'https://n8n.codeurbase.fr/form/45380310-7a67-46af-a865-708ff84eb2af';
+  'https://n8n.codeurbase.fr/webhook/agent/upload';
 
 const N8N_CHAT_URL =
   process.env.N8N_CHAT_URL ||
