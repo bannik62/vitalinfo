@@ -70,41 +70,46 @@ router.post(
       return res.status(400).json({ error: 'Seuls les fichiers PDF sont autorisés.' });
     }
 
-    const formData = new FormData();
-    // Envoyer le fichier avec le nom de champ 'doc' comme configuré dans n8n
-    // Utiliser le buffer directement avec le nom de fichier original
-    formData.append('doc', req.file.buffer, {
-      filename: req.file.originalname,
-      contentType: req.file.mimetype,
-      knownLength: req.file.size
-    });
-    
-    // Envoyer le userId à n8n pour qu'il puisse le renvoyer avec les résultats
-    const userId = req.user?.id || 'global';
-    formData.append('userId', userId);
-    formData.append('userEmail', req.user?.email || '');
-    // Envoyer explicitement le nom du fichier pour que n8n puisse le renvoyer
-    formData.append('fileName', req.file.originalname);
-    formData.append('originalName', req.file.originalname);
-
-    console.log('📤 Envoi fichier à n8n:', {
-      fileName: req.file.originalname,
-      fileSize: req.file.size,
-      mimetype: req.file.mimetype,
-      userId: userId,
-      url: N8N_UPLOAD_URL,
-      bufferLength: req.file.buffer?.length,
-      hasBuffer: !!req.file.buffer
-    });
-    
-    // Vérifier que le FormData contient bien le fichier
-    console.log('📋 FormData fields:', {
-      hasDoc: formData.has('doc'),
-      hasUserId: formData.has('userId'),
-      hasFileName: formData.has('fileName')
-    });
+    // Vérifier que le nom du fichier est présent
+    if (!req.file.originalname) {
+      console.error('❌ Nom de fichier manquant:', req.file);
+      return res.status(400).json({ error: 'Nom de fichier manquant.' });
+    }
 
     try {
+      const formData = new FormData();
+      // Envoyer le fichier avec le nom de champ 'doc' comme configuré dans n8n
+      // Utiliser le buffer directement avec le nom de fichier original
+      formData.append('doc', req.file.buffer, {
+        filename: req.file.originalname,
+        contentType: req.file.mimetype
+      });
+      
+      // Envoyer le userId à n8n pour qu'il puisse le renvoyer avec les résultats
+      const userId = req.user?.id || 'global';
+      formData.append('userId', userId);
+      formData.append('userEmail', req.user?.email || '');
+      // Envoyer explicitement le nom du fichier pour que n8n puisse le renvoyer
+      formData.append('fileName', req.file.originalname);
+      formData.append('originalName', req.file.originalname);
+
+      console.log('📤 Envoi fichier à n8n:', {
+        fileName: req.file.originalname,
+        fileSize: req.file.size,
+        mimetype: req.file.mimetype,
+        userId: userId,
+        url: N8N_UPLOAD_URL,
+        bufferLength: req.file.buffer?.length,
+        hasBuffer: !!req.file.buffer
+      });
+      
+      // Vérifier que le FormData contient bien le fichier
+      console.log('📋 FormData fields:', {
+        hasDoc: formData.has('doc'),
+        hasUserId: formData.has('userId'),
+        hasFileName: formData.has('fileName')
+      });
+
       const response = await axios.post(N8N_UPLOAD_URL, formData, {
         headers: formData.getHeaders(),
         maxContentLength: Infinity,
@@ -119,16 +124,20 @@ router.post(
         message: 'Document transmis à n8n pour traitement.'
       });
     } catch (error) {
-      console.error(
-        'Erreur lors de la transmission à n8n:',
-        error.message,
-        'status:',
-        error.response?.status,
-        'data:',
-        error.response?.data
-      );
+      console.error('❌ Erreur lors de la transmission à n8n:', error.message);
+      console.error('❌ Stack:', error.stack);
+      console.error('❌ Status:', error.response?.status);
+      console.error('❌ Response data:', error.response?.data);
+      
+      // Si c'est une erreur serveur interne, renvoyer un message plus clair
+      if (error.response?.status >= 500) {
+        return res.status(502).json({
+          error: "Erreur serveur lors de la transmission à n8n. Veuillez réessayer."
+        });
+      }
+      
       return res.status(502).json({
-        error: "Impossible de transmettre le document à n8n pour le moment."
+        error: error.response?.data?.error || "Impossible de transmettre le document à n8n pour le moment."
       });
     }
   }
