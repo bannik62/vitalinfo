@@ -2,6 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import axios from 'axios';
 import FormData from 'form-data';
+import { Readable } from 'stream';
 import { authenticateToken } from '../middleware/auth.js';
 import csrfProtection from '../middleware/csrf.js';
 
@@ -78,9 +79,12 @@ router.post(
 
     try {
       const formData = new FormData();
-      // Envoyer le fichier avec le nom de champ 'doc' comme configuré dans n8n
-      // Utiliser le buffer directement avec le nom de fichier original
-      formData.append('doc', req.file.buffer, {
+      
+      // n8n Form Trigger attend les fichiers comme des streams ou buffers
+      // Essayer avec un stream Readable qui est souvent mieux accepté par n8n
+      const fileStream = Readable.from(req.file.buffer);
+      
+      formData.append('doc', fileStream, {
         filename: req.file.originalname,
         contentType: req.file.mimetype
       });
@@ -103,8 +107,11 @@ router.post(
         hasBuffer: !!req.file.buffer
       });
 
+      const headers = formData.getHeaders();
+      console.log('📋 Headers FormData:', JSON.stringify(headers, null, 2));
+
       const response = await axios.post(N8N_UPLOAD_URL, formData, {
-        headers: formData.getHeaders(),
+        headers: headers,
         maxContentLength: Infinity,
         maxBodyLength: Infinity,
         timeout: 30_000
