@@ -80,11 +80,9 @@ router.post(
     try {
       const formData = new FormData();
       
-      // n8n Form Trigger attend les fichiers comme des streams ou buffers
-      // Essayer avec un stream Readable qui est souvent mieux accepté par n8n
-      const fileStream = Readable.from(req.file.buffer);
-      
-      formData.append('doc', fileStream, {
+      // n8n Form Trigger attend les fichiers en multipart/form-data
+      // Utiliser le buffer directement avec le nom de fichier pour que n8n puisse l'extraire
+      formData.append('doc', req.file.buffer, {
         filename: req.file.originalname,
         contentType: req.file.mimetype
       });
@@ -94,8 +92,10 @@ router.post(
       formData.append('userId', userId);
       formData.append('userEmail', req.user?.email || '');
       // Envoyer explicitement le nom du fichier pour que n8n puisse le renvoyer
+      // n8n peut utiliser ces champs pour remplir original_name dans sa réponse
       formData.append('fileName', req.file.originalname);
       formData.append('originalName', req.file.originalname);
+      formData.append('original_filename', req.file.originalname); // Variante supplémentaire
 
       console.log('📤 Envoi fichier à n8n:', {
         fileName: req.file.originalname,
