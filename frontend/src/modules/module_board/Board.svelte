@@ -27,6 +27,9 @@
   let docsError = '';
   let pollingInterval = null;
   let initialDocsCount = 0;
+  let editingDocId = null; // ID du document en cours d'édition
+  let editingTitle = ''; // Titre en cours d'édition
+  let savingDoc = false; // État de sauvegarde
 
   function handleCsrfTokenReceived(event) {
     csrfToken = event.detail;
@@ -249,6 +252,59 @@
     }
   }
 
+  function startEditDoc(doc) {
+    editingDocId = doc.id;
+    editingTitle = doc.suggested_filename || doc.original_name || doc.fileName || doc.originalName || '';
+  }
+
+  function cancelEditDoc() {
+    editingDocId = null;
+    editingTitle = '';
+  }
+
+  async function saveDocEdit(docId) {
+    if (!editingTitle.trim()) {
+      docsError = 'Le titre ne peut pas être vide.';
+      return;
+    }
+
+    if (!csrfToken) {
+      docsError = 'Token CSRF indisponible. Rechargez la page.';
+      return;
+    }
+
+    savingDoc = true;
+    docsError = '';
+
+    try {
+      const response = await axios.put(
+        `/api/docs/${docId}`,
+        { suggested_filename: editingTitle.trim() },
+        {
+          headers: {
+            'X-CSRF-Token': csrfToken,
+            'Content-Type': 'application/json'
+          },
+          withCredentials: true
+        }
+      );
+
+      // Mettre à jour le document dans la liste locale
+      docs = docs.map(doc => 
+        doc.id === docId 
+          ? { ...doc, suggested_filename: editingTitle.trim() }
+          : doc
+      );
+
+      editingDocId = null;
+      editingTitle = '';
+    } catch (error) {
+      docsError = error.response?.data?.error || 'Erreur lors de la sauvegarde.';
+    } finally {
+      savingDoc = false;
+    }
+  }
+
   // Fonction pour convertir les URLs en liens cliquables
   function formatMessageWithLinks(text) {
     if (!text) return text;
@@ -388,7 +444,23 @@
           <li>
             <div class="doc-row">
               <div>
-                <div class="doc-title">{doc.suggested_filename || doc.original_name || doc.fileName || doc.originalName || 'Document sans nom'}</div>
+                {#if editingDocId === doc.id}
+                  <input
+                    type="text"
+                    bind:value={editingTitle}
+                    class="doc-edit-input"
+                    disabled={savingDoc}
+                    on:keydown={(e) => {
+                      if (e.key === 'Enter') {
+                        saveDocEdit(doc.id);
+                      } else if (e.key === 'Escape') {
+                        cancelEditDoc();
+                      }
+                    }}
+                  />
+                {:else}
+                  <div class="doc-title">{doc.suggested_filename || doc.original_name || doc.fileName || doc.originalName || 'Document sans nom'}</div>
+                {/if}
                 <div class="doc-meta">
                   {doc.issuer || 'Source inconnue'} — {doc.category || 'catégorie'} — {doc.document_date ?? 'date inconnue'}
                 </div>
@@ -396,16 +468,41 @@
                   <div class="doc-tldr">{doc.tldr}</div>
                 {/if}
               </div>
-              {#if doc.binary_reference}
-                <a
-                  class="doc-link"
-                  href={doc.binary_reference?.publicUrl || '#'}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Ouvrir
-                </a>
-              {/if}
+              <div class="doc-actions">
+                {#if editingDocId === doc.id}
+                  <button
+                    class="doc-btn doc-btn-save"
+                    on:click={() => saveDocEdit(doc.id)}
+                    disabled={savingDoc}
+                  >
+                    {savingDoc ? 'Sauvegarde...' : 'Sauvegarder'}
+                  </button>
+                  <button
+                    class="doc-btn doc-btn-cancel"
+                    on:click={cancelEditDoc}
+                    disabled={savingDoc}
+                  >
+                    Annuler
+                  </button>
+                {:else}
+                  <button
+                    class="doc-btn doc-btn-edit"
+                    on:click={() => startEditDoc(doc)}
+                  >
+                    Éditer
+                  </button>
+                  {#if doc.binary_reference}
+                    <a
+                      class="doc-link"
+                      href={doc.binary_reference?.publicUrl || '#'}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Ouvrir
+                    </a>
+                  {/if}
+                {/if}
+              </div>
             </div>
           </li>
         {/each}
@@ -665,6 +762,7 @@
     justify-content: space-between;
     gap: 16px;
     flex-wrap: wrap;
+    align-items: flex-start;
   }
 
   .doc-title {
@@ -683,6 +781,80 @@
     margin-top: 12px;
     font-size: 14px;
     color: rgba(203, 213, 225, 0.9);
+  }
+
+  .doc-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .doc-btn {
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    background: transparent;
+    color: #e2e8f0;
+    cursor: pointer;
+    font-size: 14px;
+    transition: border-color 0.2s, color 0.2s;
+  }
+
+  .doc-btn:hover:not(:disabled) {
+    border-color: rgba(148, 163, 184, 0.6);
+    color: #fff;
+  }
+
+  .doc-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .doc-btn-edit {
+    border-color: rgba(59, 130, 246, 0.4);
+    color: #93c5fd;
+  }
+
+  .doc-btn-edit:hover:not(:disabled) {
+    border-color: rgba(59, 130, 246, 0.7);
+    color: #bfdbfe;
+  }
+
+  .doc-btn-save {
+    border-color: rgba(34, 197, 94, 0.4);
+    color: #86efac;
+  }
+
+  .doc-btn-save:hover:not(:disabled) {
+    border-color: rgba(34, 197, 94, 0.7);
+    color: #bbf7d0;
+  }
+
+  .doc-btn-cancel {
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #fca5a5;
+  }
+
+  .doc-btn-cancel:hover:not(:disabled) {
+    border-color: rgba(239, 68, 68, 0.7);
+    color: #fecaca;
+  }
+
+  .doc-edit-input {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(59, 130, 246, 0.5);
+    background: rgba(11, 18, 34, 0.9);
+    color: #f8fafc;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .doc-edit-input:focus {
+    outline: none;
+    border-color: rgba(59, 130, 246, 0.8);
   }
 
   .doc-link {
