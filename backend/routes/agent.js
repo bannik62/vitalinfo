@@ -78,14 +78,14 @@ router.post(
     }
 
     try {
-      const formData = new FormData();
+    const formData = new FormData();
       
       // n8n Form Trigger - essayer avec le buffer directement
       // Certaines versions de n8n préfèrent le buffer au stream
-      formData.append('doc', req.file.buffer, {
-        filename: req.file.originalname,
-        contentType: req.file.mimetype
-      });
+    formData.append('doc', req.file.buffer, {
+      filename: req.file.originalname,
+      contentType: req.file.mimetype
+    });
     
     // Envoyer le userId à n8n pour qu'il puisse le renvoyer avec les résultats
     const userId = req.user?.id || 'global';
@@ -258,13 +258,106 @@ router.post('/docs/result', assertN8NSecret, (req, res) => {
   return res.json({ success: true });
 });
 
-router.get('/docs/latest', authenticateToken, (req, res) => {
-  // Utiliser toujours 'global' pour correspondre avec les données envoyées par n8n
-  const userId = 'global';
-  console.log('📤 Récupération documents pour userId:', userId);
-  const documents = docResultsStore.get(userId) || [];
-  console.log('📚 Documents trouvés:', documents.length);
-  return res.json({ documents });
+router.get('/docs/latest', authenticateToken, async (req, res) => {
+  try {
+    // Récupérer les documents depuis Supabase au lieu du Map en mémoire
+    const supabaseUrl = process.env.SUPABASE_URL || 'https://zuvzpcfrbheqeqbiottv.supabase.co';
+    const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_KEY;
+    
+    if (!supabaseKey) {
+      console.warn('⚠️ SUPABASE_ANON_KEY non configuré, utilisation du Map en mémoire');
+      const userId = 'global';
+      const documents = docResultsStore.get(userId) || [];
+      return res.json({ documents });
+    }
+
+    // Récupérer les documents depuis Supabase, triés par date de création décroissante
+    const response = await axios.get(
+      `${supabaseUrl}/rest/v1/documents_metadata`,
+      {
+        headers: {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json'
+        },
+        params: {
+          select: '*',
+          order: 'created_at.desc',
+          limit: 25
+        }
+      }
+    );
+
+    const documents = response.data || [];
+    console.log('📚 Documents récupérés depuis Supabase:', documents.length);
+    
+    return res.json({ documents });
+  } catch (error) {
+    console.error('❌ Erreur lors de la récupération depuis Supabase:', error.message);
+    // Fallback sur le Map en mémoire en cas d'erreur
+    const userId = 'global';
+    const documents = docResultsStore.get(userId) || [];
+    return res.json({ documents });
+  }
+});
+
+router.put('/docs/:id', authenticateToken, csrfProtection, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { suggested_filename, original_name } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ error: 'ID du document requis.' });
+    }
+
+    // Récupérer les credentials Supabase
+    const supabaseUrl = process.env.SUPABASE_URL || 'https://zuvzpcfrbheqeqbiottv.supabase.co';
+    const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_KEY;
+    
+    if (!supabaseKey) {
+      return res.status(500).json({ error: 'Configuration Supabase manquante.' });
+    }
+
+    // Préparer les données à mettre à jour
+    const updateData = {};
+    if (suggested_filename !== undefined) {
+      updateData.suggested_filename = suggested_filename;
+    }
+    if (original_name !== undefined) {
+      updateData.original_name = original_name;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: 'Aucune donnée à mettre à jour.' });
+    }
+
+    // Mettre à jour le document dans Supabase
+    const response = await axios.patch(
+      `${supabaseUrl}/rest/v1/documents_metadata?id=eq.${id}`,
+      updateData,
+      {
+        headers: {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        }
+      }
+    );
+
+    console.log('✅ Document mis à jour dans Supabase:', id);
+    
+    return res.json({ 
+      success: true, 
+      document: response.data?.[0] || response.data 
+    });
+  } catch (error) {
+    console.error('❌ Erreur lors de la mise à jour du document:', error.message);
+    console.error('Response:', error.response?.data);
+    return res.status(500).json({ 
+      error: 'Erreur lors de la mise à jour du document.' 
+    });
+  }
 });
 
 export default router;
