@@ -27,6 +27,10 @@
   let docsError = '';
   let pollingInterval = null;
   let initialDocsCount = 0;
+  let categoryGroups = [];
+  let uncategorizedDocs = [];
+  let selectedCategory = null;
+  let categoryModalOpen = false;
   let editingDocId = null; // ID du document en cours d'édition
   let editingTitle = ''; // Titre en cours d'édition
   let savingDoc = false; // État de sauvegarde
@@ -192,6 +196,7 @@
       }
       
       docs = newDocs;
+      refreshCategoryGroups();
     } catch (error) {
       docsError =
         error.response?.data?.error ||
@@ -239,6 +244,7 @@
       }
       
       docs = newDocs;
+      refreshCategoryGroups();
     } catch (error) {
       // En cas d'erreur silencieuse, on ne fait rien
       console.error('Erreur lors du polling:', error);
@@ -252,9 +258,73 @@
     }
   }
 
+  function refreshCategoryGroups() {
+    const map = new Map();
+    const others = [];
+
+    docs.forEach((doc) => {
+      const categoryName = doc.category?.trim();
+      if (!categoryName) {
+        others.push(doc);
+        return;
+      }
+
+      if (!map.has(categoryName)) {
+        map.set(categoryName, {
+          name: categoryName,
+          count: 0,
+          lastDate: null,
+          issuers: new Map()
+        });
+      }
+
+      const categoryEntry = map.get(categoryName);
+      categoryEntry.count += 1;
+
+      if (doc.document_date) {
+        const currentDate = new Date(doc.document_date);
+        if (!categoryEntry.lastDate || currentDate > categoryEntry.lastDate) {
+          categoryEntry.lastDate = currentDate;
+        }
+      }
+
+      const issuerName = doc.issuer?.trim() || 'Émetteur inconnu';
+      if (!categoryEntry.issuers.has(issuerName)) {
+        categoryEntry.issuers.set(issuerName, []);
+      }
+      categoryEntry.issuers.get(issuerName).push(doc);
+    });
+
+    categoryGroups = Array.from(map.values())
+      .map((entry) => ({
+        name: entry.name,
+        count: entry.count,
+        lastDate: entry.lastDate ? entry.lastDate.toISOString().split('T')[0] : null,
+        issuers: Array.from(entry.issuers.entries()).map(([issuerName, documents]) => ({
+          name: issuerName,
+          documents
+        }))
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    uncategorizedDocs = others;
+
+    if (categoryModalOpen && selectedCategory) {
+      const updatedCategory = categoryGroups.find(
+        (category) => category.name === selectedCategory.name
+      );
+      if (updatedCategory) {
+        selectedCategory = updatedCategory;
+      } else {
+        closeCategoryModal();
+      }
+    }
+  }
+
   function startEditDoc(doc) {
     editingDocId = doc.id;
-    editingTitle = doc.suggested_filename || doc.original_name || doc.fileName || doc.originalName || '';
+    editingTitle =
+      doc.suggested_filename || doc.original_name || doc.fileName || doc.originalName || '';
   }
 
   function cancelEditDoc() {
@@ -277,7 +347,7 @@
     docsError = '';
 
     try {
-      const response = await axios.put(
+      await axios.put(
         `/api/docs/${docId}`,
         { suggested_filename: editingTitle.trim() },
         {
@@ -289,13 +359,10 @@
         }
       );
 
-      // Mettre à jour le document dans la liste locale
-      docs = docs.map(doc => 
-        doc.id === docId 
-          ? { ...doc, suggested_filename: editingTitle.trim() }
-          : doc
+      docs = docs.map((doc) =>
+        doc.id === docId ? { ...doc, suggested_filename: editingTitle.trim() } : doc
       );
-
+      refreshCategoryGroups();
       editingDocId = null;
       editingTitle = '';
     } catch (error) {
@@ -303,6 +370,16 @@
     } finally {
       savingDoc = false;
     }
+  }
+
+  function openCategoryModal(category) {
+    selectedCategory = category;
+    categoryModalOpen = true;
+  }
+
+  function closeCategoryModal() {
+    categoryModalOpen = false;
+    selectedCategory = null;
   }
 
   // Fonction pour convertir les URLs en liens cliquables
@@ -434,82 +511,210 @@
       <div class="message message-error">{docsError}</div>
     {/if}
 
+    <div class="docs-overview">
+      <div class="docs-summary">
+        <div class="summary-value">{docs.length}</div>
+        <div class="summary-label">Documents stockés</div>
+      </div>
+    </div>
+
     {#if docsLoading && docs.length === 0}
       <div class="docs-placeholder">Chargement des documents…</div>
     {:else if docs.length === 0}
       <div class="docs-placeholder">Aucun document reçu pour l'instant.</div>
     {:else}
-      <ul class="docs-list">
-        {#each docs as doc, index (doc.id || doc.receivedAt || doc.suggested_filename || index)}
-          <li>
-            <div class="doc-row">
-              <div>
-                {#if editingDocId === doc.id}
-                  <input
-                    type="text"
-                    bind:value={editingTitle}
-                    class="doc-edit-input"
-                    disabled={savingDoc}
-                    on:keydown={(e) => {
-                      if (e.key === 'Enter') {
-                        saveDocEdit(doc.id);
-                      } else if (e.key === 'Escape') {
-                        cancelEditDoc();
-                      }
-                    }}
-                  />
-                {:else}
-                  <div class="doc-title">{doc.suggested_filename || doc.original_name || doc.fileName || doc.originalName || 'Document sans nom'}</div>
-                {/if}
-                <div class="doc-meta">
-                  {doc.issuer || 'Source inconnue'} — {doc.category || 'catégorie'} — {doc.document_date ?? 'date inconnue'}
-                </div>
-                {#if doc.tldr}
-                  <div class="doc-tldr">{doc.tldr}</div>
-                {/if}
+      {#if categoryGroups.length > 0}
+        <div class="categories-grid">
+          {#each categoryGroups as category}
+            <div class="category-card">
+              <div class="category-header">
+                <h3>{category.name}</h3>
+                <span class="category-count">
+                  {category.count} document{category.count > 1 ? 's' : ''}
+                </span>
               </div>
-              <div class="doc-actions">
-                {#if editingDocId === doc.id}
-                  <button
-                    class="doc-btn doc-btn-save"
-                    on:click={() => saveDocEdit(doc.id)}
-                    disabled={savingDoc}
-                  >
-                    {savingDoc ? 'Sauvegarde...' : 'Sauvegarder'}
-                  </button>
-                  <button
-                    class="doc-btn doc-btn-cancel"
-                    on:click={cancelEditDoc}
-                    disabled={savingDoc}
-                  >
-                    Annuler
-                  </button>
-                {:else}
-                  <button
-                    class="doc-btn doc-btn-edit"
-                    on:click={() => startEditDoc(doc)}
-                  >
-                    Éditer
-                  </button>
-                  {#if doc.binary_reference}
-                    <a
-                      class="doc-link"
-                      href={doc.binary_reference?.publicUrl || '#'}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Ouvrir
-                    </a>
-                  {/if}
-                {/if}
-              </div>
+              {#if category.lastDate}
+                <div class="category-last">Dernier : {category.lastDate}</div>
+              {/if}
+              <button class="category-btn" on:click={() => openCategoryModal(category)}>
+                Voir les documents
+              </button>
             </div>
-          </li>
-        {/each}
-      </ul>
+          {/each}
+        </div>
+      {/if}
+
+      {#if uncategorizedDocs.length > 0}
+        <div class="uncategorized-section">
+          <h3>Autres documents ({uncategorizedDocs.length})</h3>
+          <ul class="docs-list">
+            {#each uncategorizedDocs as doc, index (doc.id || doc.receivedAt || doc.suggested_filename || index)}
+              <li>
+                <div class="doc-row">
+                  <div>
+                    {#if editingDocId === doc.id}
+                      <input
+                        type="text"
+                        bind:value={editingTitle}
+                        class="doc-edit-input"
+                        disabled={savingDoc}
+                        on:keydown={(e) => {
+                          if (e.key === 'Enter') {
+                            saveDocEdit(doc.id);
+                          } else if (e.key === 'Escape') {
+                            cancelEditDoc();
+                          }
+                        }}
+                      />
+                    {:else}
+                      <div class="doc-title">
+                        {doc.suggested_filename || doc.original_name || doc.fileName || doc.originalName || 'Document sans nom'}
+                      </div>
+                    {/if}
+                    <div class="doc-meta">
+                      {doc.issuer || 'Source inconnue'} — {doc.category || 'catégorie'} — {doc.document_date ?? 'date inconnue'}
+                    </div>
+                    {#if doc.tldr}
+                      <div class="doc-tldr">{doc.tldr}</div>
+                    {/if}
+                  </div>
+                  <div class="doc-actions">
+                    {#if editingDocId === doc.id}
+                      <button
+                        class="doc-btn doc-btn-save"
+                        on:click={() => saveDocEdit(doc.id)}
+                        disabled={savingDoc}
+                      >
+                        {savingDoc ? 'Sauvegarde...' : 'Sauvegarder'}
+                      </button>
+                      <button
+                        class="doc-btn doc-btn-cancel"
+                        on:click={cancelEditDoc}
+                        disabled={savingDoc}
+                      >
+                        Annuler
+                      </button>
+                    {:else}
+                      <button
+                        class="doc-btn doc-btn-edit"
+                        on:click={() => startEditDoc(doc)}
+                      >
+                        Éditer
+                      </button>
+                      {#if doc.binary_reference}
+                        <a
+                          class="doc-link"
+                          href={doc.binary_reference?.publicUrl || '#'}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Ouvrir
+                        </a>
+                      {/if}
+                    {/if}
+                  </div>
+                </div>
+              </li>
+            {/each}
+          </ul>
+        </div>
+      {/if}
     {/if}
   </section>
 </div>
+
+{#if categoryModalOpen && selectedCategory}
+  <div class="modal-backdrop" on:click={closeCategoryModal}>
+    <div class="modal-panel" on:click|stopPropagation>
+      <button class="modal-close" on:click={closeCategoryModal}>×</button>
+      <h3>{selectedCategory.name}</h3>
+      <p class="modal-subtitle">
+        {selectedCategory.count} document{selectedCategory.count > 1 ? 's' : ''}
+      </p>
+
+      <div class="modal-issuers">
+        {#each selectedCategory.issuers as issuer}
+          <section class="issuer-section">
+            <div class="issuer-header">
+              <h4>{issuer.name}</h4>
+              <span>{issuer.documents.length} document{issuer.documents.length > 1 ? 's' : ''}</span>
+            </div>
+            <ul class="docs-list">
+              {#each issuer.documents as doc, index (doc.id || doc.receivedAt || doc.suggested_filename || index)}
+                <li>
+                  <div class="doc-row">
+                    <div>
+                      {#if editingDocId === doc.id}
+                        <input
+                          type="text"
+                          bind:value={editingTitle}
+                          class="doc-edit-input"
+                          disabled={savingDoc}
+                          on:keydown={(e) => {
+                            if (e.key === 'Enter') {
+                              saveDocEdit(doc.id);
+                            } else if (e.key === 'Escape') {
+                              cancelEditDoc();
+                            }
+                          }}
+                        />
+                      {:else}
+                        <div class="doc-title">
+                          {doc.suggested_filename || doc.original_name || doc.fileName || doc.originalName || 'Document sans nom'}
+                        </div>
+                      {/if}
+                      <div class="doc-meta">
+                        {doc.issuer || 'Source inconnue'} — {doc.document_date ?? 'date inconnue'}
+                      </div>
+                      {#if doc.tldr}
+                        <div class="doc-tldr">{doc.tldr}</div>
+                      {/if}
+                    </div>
+                    <div class="doc-actions">
+                      {#if editingDocId === doc.id}
+                        <button
+                          class="doc-btn doc-btn-save"
+                          on:click={() => saveDocEdit(doc.id)}
+                          disabled={savingDoc}
+                        >
+                          {savingDoc ? 'Sauvegarde...' : 'Sauvegarder'}
+                        </button>
+                        <button
+                          class="doc-btn doc-btn-cancel"
+                          on:click={cancelEditDoc}
+                          disabled={savingDoc}
+                        >
+                          Annuler
+                        </button>
+                      {:else}
+                        <button
+                          class="doc-btn doc-btn-edit"
+                          on:click={() => startEditDoc(doc)}
+                        >
+                          Éditer
+                        </button>
+                        {#if doc.binary_reference}
+                          <a
+                            class="doc-link"
+                            href={doc.binary_reference?.publicUrl || '#'}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Ouvrir
+                          </a>
+                        {/if}
+                      {/if}
+                    </div>
+                  </div>
+                </li>
+              {/each}
+            </ul>
+          </section>
+        {/each}
+      </div>
+    </div>
+  </div>
+{/if}
 
 <style>
   .board-container {
@@ -869,6 +1074,153 @@
 
   .doc-link:hover {
     border-color: rgba(59, 130, 246, 0.7);
+  }
+
+  .docs-overview {
+    display: flex;
+    gap: 24px;
+    margin: 24px 0;
+  }
+
+  .docs-summary {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 14px;
+    padding: 16px 24px;
+    text-align: center;
+  }
+
+  .summary-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: #f8fafc;
+  }
+
+  .summary-label {
+    font-size: 14px;
+    color: rgba(226, 232, 240, 0.7);
+  }
+
+  .categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .category-card {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .category-header h3 {
+    margin: 0;
+    color: #f1f5f9;
+    font-size: 16px;
+  }
+
+  .category-count {
+    font-size: 14px;
+    color: rgba(226, 232, 240, 0.7);
+  }
+
+  .category-last {
+    font-size: 13px;
+    color: rgba(226, 232, 240, 0.6);
+  }
+
+  .category-btn {
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    background: transparent;
+    color: #93c5fd;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .category-btn:hover {
+    border-color: rgba(59, 130, 246, 0.7);
+  }
+
+  .uncategorized-section {
+    margin-top: 24px;
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.72);
+    backdrop-filter: blur(3px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .modal-panel {
+    background: rgba(8, 15, 29, 0.98);
+    border-radius: 20px;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    padding: 32px;
+    width: min(900px, 90vw);
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 24px;
+    cursor: pointer;
+  }
+
+  .modal-subtitle {
+    margin-top: 4px;
+    color: rgba(226, 232, 240, 0.7);
+  }
+
+  .modal-issuers {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin-top: 24px;
+  }
+
+  .issuer-section {
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 14px;
+    padding: 16px;
+    background: rgba(15, 23, 42, 0.7);
+  }
+
+  .issuer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .issuer-header h4 {
+    margin: 0;
+    color: #f1f5f9;
   }
 
   @media (max-width: 991px) {
