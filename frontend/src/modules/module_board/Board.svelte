@@ -73,7 +73,7 @@
     uploadMessage = '';
 
     try {
-      await axios.post('/api/docs/upload', formData, {
+      await axios.post('/api/agent/docs/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'X-CSRF-Token': csrfToken
@@ -187,7 +187,7 @@
     docsLoading = true;
     docsError = '';
     try {
-      const response = await axios.get('/api/docs/latest', {
+      const response = await axios.get('/api/agent/docs/latest', {
         withCredentials: true
       });
       const docsRaw = response.data?.documents || [];
@@ -235,7 +235,7 @@
 
   async function fetchLatestDocsSilently() {
     try {
-      const response = await axios.get('/api/docs/latest', {
+      const response = await axios.get('/api/agent/docs/latest', {
         withCredentials: true
       });
       const docsRaw = response.data?.documents || [];
@@ -389,7 +389,7 @@
 
     try {
       await axios.put(
-        `/api/docs/${docId}`,
+        `/api/agent/docs/${docId}`,
         { suggested_filename: editingTitle.trim() },
         {
           headers: {
