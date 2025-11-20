@@ -163,7 +163,7 @@
         text-shadow: 3px 3px 8px rgba(207, 215, 216, 0.8), 0 0 15px rgba(89, 135, 146, 0.5);
     }
     .container-login-form-description-text {
-        font-size: 24px;
+        font-size: clamp(18px, 2.5vw, 24px);
         font-weight: bold;
         margin-bottom: 20px;
         color: #333;
@@ -232,7 +232,7 @@
     h2 {
         margin: 0 0 30px 0;
         color: #553939;
-        font-size: 28px;
+        font-size: clamp(22px, 3vw, 28px);
         text-align: center;
     }
 
@@ -245,7 +245,7 @@
         margin-bottom: 8px;
         color: #555;
         font-weight: 600;
-        font-size: 14px;
+        font-size: clamp(12px, 1.5vw, 14px);
     }
 
     input {
@@ -253,7 +253,7 @@
         padding: 12px;
         border: 2px solid #e0e0e0;
         border-radius: 8px;
-        font-size: 16px;
+        font-size: clamp(14px, 1.8vw, 16px);
         font-family: inherit;
         transition: border-color 0.3s;
         box-sizing: border-box;
@@ -276,7 +276,7 @@
         color: white;
         border: none;
         border-radius: 8px;
-        font-size: 16px;
+        font-size: clamp(14px, 1.8vw, 16px);
         font-weight: 600;
         cursor: pointer;
         transition: opacity 0.3s, transform 0.2s;
@@ -298,7 +298,7 @@
         padding: 12px 16px;
         border-radius: 8px;
         margin-bottom: 20px;
-        font-size: 14px;
+        font-size: clamp(12px, 1.5vw, 14px);
         text-align: center;
     }
 

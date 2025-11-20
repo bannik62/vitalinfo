@@ -12,7 +12,7 @@ import FormLogin from '../../modules/module_login/FormLogin.svelte';
         display:flex;
         align-items: center;
         justify-content: center;
-        height: 100%;
+        min-height: 100vh;
         width: 100%;
         background: #020024;
 background: radial-gradient(circle, rgba(2, 0, 36, 1) 0%, rgba(9, 9, 121, 1) 77%, rgba(0, 212, 255, 1) 100%);
