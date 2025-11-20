@@ -73,7 +73,7 @@
     uploadMessage = '';
 
     try {
-      await axios.post('/api/agent/docs/upload', formData, {
+      await axios.post('/api/docs/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'X-CSRF-Token': csrfToken
@@ -187,7 +187,7 @@
     docsLoading = true;
     docsError = '';
     try {
-      const response = await axios.get('/api/agent/docs/latest', {
+      const response = await axios.get('/api/docs/latest', {
         withCredentials: true
       });
       const docsRaw = response.data?.documents || [];
@@ -235,7 +235,7 @@
 
   async function fetchLatestDocsSilently() {
     try {
-      const response = await axios.get('/api/agent/docs/latest', {
+      const response = await axios.get('/api/docs/latest', {
         withCredentials: true
       });
       const docsRaw = response.data?.documents || [];
@@ -389,7 +389,7 @@
 
     try {
       await axios.put(
-        `/api/agent/docs/${docId}`,
+        `/api/docs/${docId}`,
         { suggested_filename: editingTitle.trim() },
         {
           headers: {
@@ -530,6 +530,12 @@
           bind:value={chatInput}
           placeholder="Posez votre question…"
           disabled={chatLoading}
+          on:keydown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              sendChatMessage();
+            }
+          }}
         ></textarea>
         <button class="submit-btn" on:click={sendChatMessage} disabled={chatLoading}>
           {chatLoading ? 'Envoi…' : 'Envoyer'}
@@ -824,7 +830,7 @@
   h2 {
     margin: 0 0 24px;
     color: #f8fafc;
-    font-size: 22px;
+    font-size: clamp(18px, 2vw, 22px);
     letter-spacing: 0.04em;
     text-align: left;
   }
@@ -856,7 +862,7 @@
 
   .helper-text {
     margin-top: 16px;
-    font-size: 14px;
+    font-size: clamp(12px, 1.5vw, 14px);
     color: rgba(226, 232, 240, 0.7);
     text-align: center;
   }
@@ -869,7 +875,7 @@
     background: linear-gradient(135deg, #0ea5e9, #2563eb);
     color: #fff;
     font-weight: 600;
-    font-size: 16px;
+    font-size: clamp(14px, 1.8vw, 16px);
     cursor: pointer;
     transition: opacity 0.3s, transform 0.2s;
   }
@@ -887,7 +893,7 @@
   .message {
     padding: 14px 16px;
     border-radius: 10px;
-    font-size: 14px;
+    font-size: clamp(12px, 1.5vw, 14px);
     margin-bottom: 16px;
     text-align: center;
   }
@@ -913,6 +919,8 @@
     padding: 16px;
     margin-bottom: 16px;
     max-height: 380px;
+    max-width: 100%;
+    overflow-wrap: break-word;
   }
 
   .chat-placeholder,
@@ -926,11 +934,14 @@
     margin-bottom: 14px;
     padding: 12px 14px;
     border-radius: 12px;
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
   }
 
   .chat-message .sender {
     text-transform: uppercase;
-    font-size: 11px;
+    font-size: clamp(10px, 1.2vw, 11px);
     letter-spacing: 0.08em;
     margin-bottom: 8px;
     opacity: 0.7;
@@ -983,7 +994,7 @@
     background: rgba(11, 18, 34, 0.9);
     color: #f8fafc;
     resize: none;
-    font-size: 14px;
+    font-size: clamp(12px, 1.5vw, 14px);
   }
 
   .chat-input textarea:focus {
@@ -1035,20 +1046,20 @@
   }
 
   .doc-title {
-    font-size: 16px;
+    font-size: clamp(14px, 1.8vw, 16px);
     font-weight: 600;
     color: #f1f5f9;
   }
 
   .doc-meta {
-    font-size: 13px;
+    font-size: clamp(11px, 1.4vw, 13px);
     color: rgba(226, 232, 240, 0.7);
     margin-top: 4px;
   }
 
   .doc-tldr {
     margin-top: 12px;
-    font-size: 14px;
+    font-size: clamp(12px, 1.5vw, 14px);
     color: rgba(203, 213, 225, 0.9);
   }
 
@@ -1066,7 +1077,7 @@
     background: transparent;
     color: #e2e8f0;
     cursor: pointer;
-    font-size: 14px;
+    font-size: clamp(12px, 1.5vw, 14px);
     transition: border-color 0.2s, color 0.2s;
   }
 
@@ -1117,7 +1128,7 @@
     border: 1px solid rgba(59, 130, 246, 0.5);
     background: rgba(11, 18, 34, 0.9);
     color: #f8fafc;
-    font-size: 16px;
+    font-size: clamp(14px, 1.8vw, 16px);
     font-weight: 600;
   }
 
@@ -1155,13 +1166,13 @@
   }
 
   .summary-value {
-    font-size: 32px;
+    font-size: clamp(24px, 3vw, 32px);
     font-weight: 700;
     color: #f8fafc;
   }
 
   .summary-label {
-    font-size: 14px;
+    font-size: clamp(12px, 1.5vw, 14px);
     color: rgba(226, 232, 240, 0.7);
   }
 
@@ -1192,16 +1203,16 @@
   .category-header h3 {
     margin: 0;
     color: #f1f5f9;
-    font-size: 16px;
+    font-size: clamp(14px, 1.8vw, 16px);
   }
 
   .category-count {
-    font-size: 14px;
+    font-size: clamp(12px, 1.5vw, 14px);
     color: rgba(226, 232, 240, 0.7);
   }
 
   .category-last {
-    font-size: 13px;
+    font-size: clamp(11px, 1.4vw, 13px);
     color: rgba(226, 232, 240, 0.6);
   }
 
@@ -1252,7 +1263,7 @@
     background: transparent;
     border: none;
     color: #94a3b8;
-    font-size: 24px;
+    font-size: clamp(20px, 2.5vw, 24px);
     cursor: pointer;
   }
 
@@ -1295,6 +1306,7 @@
     .board-card {
       min-width: auto;
     }
+    /* Les font-size sont maintenant gérées par clamp(), plus besoin de media queries pour ça */
   }
 
   .error-modal {
@@ -1308,7 +1320,7 @@
 
   .error-message {
     color: #ff6b6b;
-    font-size: 16px;
+    font-size: clamp(14px, 1.8vw, 16px);
     margin-bottom: 12px;
   }
 
@@ -1324,7 +1336,7 @@
   .error-node,
   .error-time {
     color: rgba(226, 232, 240, 0.7);
-    font-size: 14px;
+    font-size: clamp(12px, 1.5vw, 14px);
     margin-top: 8px;
   }
 
