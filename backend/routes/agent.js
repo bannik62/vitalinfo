@@ -26,6 +26,7 @@ const N8N_WEBHOOK_SECRET = process.env.N8N_WEBHOOK_SECRET || '';
 
 const docResultsStore = new Map();
 const MAX_RESULTS_PER_USER = 25;
+const errorStore = new Map(); // Stockage temporaire des erreurs par userId
 
 const assertN8NSecret = (req, res, next) => {
   if (!N8N_WEBHOOK_SECRET) {
@@ -268,19 +269,44 @@ router.post('/errors', assertN8NSecret, (req, res) => {
     return res.status(400).json({ error: 'Payload d\'erreur vide reçu.' });
   }
 
-  // Log l'erreur avec timestamp
+  const userId = errorData.userId || 'global';
   const timestamp = new Date().toISOString();
+  
+  // Log l'erreur
   console.error('❌ ERREUR AGENT IA:', {
     timestamp,
     errorMessage: errorData.errorMessage,
     errorDescription: errorData.errorDescription,
     nodeName: errorData.n8nDetails?.nodeName,
-    userId: errorData.userId || 'unknown'
+    userId
   });
 
-  // TODO: Stocker l'erreur en base de données si besoin
+  // Stocker l'erreur temporairement (garder seulement les 5 dernières par user)
+  const userErrors = errorStore.get(userId) || [];
+  const newError = {
+    ...errorData,
+    timestamp,
+    id: Date.now() // ID simple pour identification
+  };
+  const updatedErrors = [newError, ...userErrors].slice(0, 5);
+  errorStore.set(userId, updatedErrors);
   
   return res.json({ success: true, message: 'Erreur enregistrée' });
+});
+
+router.get('/errors/latest', authenticateToken, (req, res) => {
+  const userId = req.user?.id || 'global';
+  const errors = errorStore.get(userId) || [];
+  
+  // Retourner la première erreur (la plus récente) et la supprimer du store
+  if (errors.length > 0) {
+    const latestError = errors[0];
+    // Supprimer l'erreur après l'avoir retournée (pour ne l'afficher qu'une fois)
+    errorStore.set(userId, errors.slice(1));
+    return res.json({ error: latestError });
+  }
+  
+  return res.json({ error: null });
 });
 
 router.get('/docs/latest', authenticateToken, async (req, res) => {

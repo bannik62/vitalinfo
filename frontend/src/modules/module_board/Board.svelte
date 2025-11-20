@@ -27,6 +27,11 @@
   let docsError = '';
   let pollingInterval = null;
   let initialDocsCount = 0;
+  
+  // Erreurs
+  let errorPollingInterval = null;
+  let currentError = null;
+  let errorModalOpen = false;
   let categoryGroups = [];
   let uncategorizedDocs = [];
   let selectedCategory = null;
@@ -38,6 +43,7 @@
   function handleCsrfTokenReceived(event) {
     csrfToken = event.detail;
     fetchLatestDocs();
+    startErrorPolling();
   }
 
   function handleFileChange(event) {
@@ -67,7 +73,7 @@
     uploadMessage = '';
 
     try {
-      await axios.post('/api/docs/upload', formData, {
+      await axios.post('/api/agent/docs/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'X-CSRF-Token': csrfToken
@@ -181,7 +187,7 @@
     docsLoading = true;
     docsError = '';
     try {
-      const response = await axios.get('/api/docs/latest', {
+      const response = await axios.get('/api/agent/docs/latest', {
         withCredentials: true
       });
       const docsRaw = response.data?.documents || [];
@@ -229,7 +235,7 @@
 
   async function fetchLatestDocsSilently() {
     try {
-      const response = await axios.get('/api/docs/latest', {
+      const response = await axios.get('/api/agent/docs/latest', {
         withCredentials: true
       });
       const docsRaw = response.data?.documents || [];
@@ -256,6 +262,41 @@
       clearInterval(pollingInterval);
       pollingInterval = null;
     }
+  }
+
+  async function checkForErrors() {
+    try {
+      const response = await axios.get('/api/agent/errors/latest', {
+        withCredentials: true
+      });
+      
+      if (response.data?.error) {
+        currentError = response.data.error;
+        errorModalOpen = true;
+      }
+    } catch (error) {
+      // Erreur silencieuse, on ne fait rien
+      console.error('Erreur lors de la vérification des erreurs:', error);
+    }
+  }
+
+  function startErrorPolling() {
+    // Vérifier toutes les 2 secondes
+    errorPollingInterval = setInterval(() => {
+      checkForErrors();
+    }, 2000);
+  }
+
+  function stopErrorPolling() {
+    if (errorPollingInterval) {
+      clearInterval(errorPollingInterval);
+      errorPollingInterval = null;
+    }
+  }
+
+  function closeErrorModal() {
+    errorModalOpen = false;
+    currentError = null;
   }
 
   function refreshCategoryGroups() {
@@ -348,7 +389,7 @@
 
     try {
       await axios.put(
-        `/api/docs/${docId}`,
+        `/api/agent/docs/${docId}`,
         { suggested_filename: editingTitle.trim() },
         {
           headers: {
@@ -427,6 +468,7 @@
   // Nettoyer le polling quand le composant est détruit
   onDestroy(() => {
     stopPollingForNewDoc();
+    stopErrorPolling();
   });
 </script>
 
@@ -712,6 +754,28 @@
           </section>
         {/each}
       </div>
+    </div>
+  </div>
+{/if}
+
+{#if errorModalOpen && currentError}
+  <div class="modal-backdrop" on:click={closeErrorModal}>
+    <div class="modal-panel error-modal" on:click|stopPropagation>
+      <button class="modal-close" on:click={closeErrorModal}>×</button>
+      <h3 style="color: #ff4444;">⚠️ Erreur de l'agent IA</h3>
+      <div class="error-content">
+        <p class="error-message"><strong>Erreur :</strong> {currentError.errorMessage || 'Erreur inconnue'}</p>
+        {#if currentError.errorDescription}
+          <p class="error-description">{currentError.errorDescription}</p>
+        {/if}
+        {#if currentError.n8nDetails?.nodeName}
+          <p class="error-node"><strong>Nœud :</strong> {currentError.n8nDetails.nodeName}</p>
+        {/if}
+        {#if currentError.timestamp}
+          <p class="error-time"><strong>Heure :</strong> {new Date(currentError.timestamp).toLocaleString('fr-FR')}</p>
+        {/if}
+      </div>
+      <button class="error-close-btn" on:click={closeErrorModal}>Fermer</button>
     </div>
   </div>
 {/if}
@@ -1231,5 +1295,52 @@
     .board-card {
       min-width: auto;
     }
+  }
+
+  .error-modal {
+    max-width: 600px;
+  }
+
+  .error-content {
+    margin: 20px 0;
+    line-height: 1.6;
+  }
+
+  .error-message {
+    color: #ff6b6b;
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .error-description {
+    color: rgba(226, 232, 240, 0.8);
+    margin-bottom: 12px;
+    padding: 12px;
+    background: rgba(255, 68, 68, 0.1);
+    border-radius: 8px;
+    border-left: 3px solid #ff4444;
+  }
+
+  .error-node,
+  .error-time {
+    color: rgba(226, 232, 240, 0.7);
+    font-size: 14px;
+    margin-top: 8px;
+  }
+
+  .error-close-btn {
+    margin-top: 20px;
+    padding: 10px 24px;
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    border-radius: 8px;
+    color: #93c5fd;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .error-close-btn:hover {
+    background: rgba(59, 130, 246, 0.3);
+    border-color: rgba(59, 130, 246, 0.6);
   }
 </style>
