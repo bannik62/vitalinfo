@@ -258,6 +258,31 @@ router.post('/docs/result', assertN8NSecret, (req, res) => {
   return res.json({ success: true });
 });
 
+router.post('/errors', assertN8NSecret, (req, res) => {
+  console.log('🔴 Route /errors appelée');
+  console.log('🔴 Erreur reçue de n8n:', JSON.stringify(req.body, null, 2));
+  
+  const errorData = req.body;
+  if (!errorData || Object.keys(errorData).length === 0) {
+    console.log('❌ Payload d\'erreur vide ou invalide');
+    return res.status(400).json({ error: 'Payload d\'erreur vide reçu.' });
+  }
+
+  // Log l'erreur avec timestamp
+  const timestamp = new Date().toISOString();
+  console.error('❌ ERREUR AGENT IA:', {
+    timestamp,
+    errorMessage: errorData.errorMessage,
+    errorDescription: errorData.errorDescription,
+    nodeName: errorData.n8nDetails?.nodeName,
+    userId: errorData.userId || 'unknown'
+  });
+
+  // TODO: Stocker l'erreur en base de données si besoin
+  
+  return res.json({ success: true, message: 'Erreur enregistrée' });
+});
+
 router.get('/docs/latest', authenticateToken, async (req, res) => {
   try {
     // Récupérer les documents depuis Supabase au lieu du Map en mémoire
