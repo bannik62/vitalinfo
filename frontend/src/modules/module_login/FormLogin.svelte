@@ -10,6 +10,7 @@
     let csrfToken = null;
     let showPassword = false;
     let passwordInput;
+    let attemptsInfo = null;
 
     function handleCsrfTokenReceived(event) {
         console.log("📥 FormLogin - Événement csrfTokenReceived reçu");
@@ -82,6 +83,7 @@
             if (response.data.success) {
                 message = "Connexion réussie !";
                 messageType = "success";
+                attemptsInfo = null; // Réinitialiser les tentatives après succès
                 // Rediriger ou mettre à jour l'état de l'application
                 setTimeout(() => {
                     window.location.reload();
@@ -91,6 +93,8 @@
             message =
                 error.response?.data?.error || "Erreur lors de la connexion";
             messageType = "error";
+            // Récupérer les infos de tentatives si disponibles
+            attemptsInfo = error.response?.data?.attemptsInfo || null;
         } finally {
             loading = false;
         }
@@ -188,6 +192,25 @@
                 {loading ? "Connexion..." : "Se connecter"}
             </button>
         </form>
+
+        {#if attemptsInfo && attemptsInfo.attempts > 0}
+            <div class="attempts-info">
+                {#if attemptsInfo.blocked}
+                    <div class="attempts-blocked">
+                        <strong>⚠️ IP bloquée</strong>
+                        <p>Votre adresse IP a été temporairement bloquée après {attemptsInfo.attempts} tentatives échouées.</p>
+                        <p>Veuillez réessayer dans <strong>{attemptsInfo.remainingMinutes} minute(s)</strong>.</p>
+                    </div>
+                {:else}
+                    <div class="attempts-warning">
+                        <strong>⚠️ Tentatives restantes : {attemptsInfo.remaining} / 5</strong>
+                        {#if attemptsInfo.attempts > 0}
+                            <p>{attemptsInfo.attempts} tentative(s) échouée(s). Attention, après 5 tentatives, votre IP sera bloquée pendant 15 minutes.</p>
+                        {/if}
+                    </div>
+                {/if}
+            </div>
+        {/if}
     </div>
 
 </div>
@@ -433,6 +456,47 @@
         background-color: #f8d7da;
         color: #721c24;
         border: 1px solid #f5c6cb;
+    }
+
+    .attempts-info {
+        margin-top: 20px;
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-size: clamp(11px, 1.3vw, 13px);
+    }
+
+    .attempts-warning {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+    }
+
+    .attempts-warning strong {
+        display: block;
+        margin-bottom: 8px;
+        font-size: clamp(12px, 1.4vw, 14px);
+    }
+
+    .attempts-warning p {
+        margin: 4px 0 0 0;
+        line-height: 1.4;
+    }
+
+    .attempts-blocked {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .attempts-blocked strong {
+        display: block;
+        margin-bottom: 8px;
+        font-size: clamp(12px, 1.4vw, 14px);
+    }
+
+    .attempts-blocked p {
+        margin: 4px 0;
+        line-height: 1.4;
     }
 
     /* Mobile (jusqu'à 576px) */

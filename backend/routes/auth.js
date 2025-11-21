@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt';
 import User from '../models/User.mjs';
 import csrfProtection, { csrfTokenGenerator } from '../middleware/csrf.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { loginRateLimit, resetLoginAttempts, getLoginAttemptsInfo, incrementLoginAttempts } from '../middleware/rateLimit.js';
 
 const router = express.Router();
 const JWT_SECRET = 'vitalinfo-jwt-secret-key-2024';
@@ -46,8 +47,8 @@ router.get('/csrf-token', csrfTokenGenerator, (req, res) => {
   res.json({ csrfToken: req.csrfToken() });
 });
 
-// Route de connexion
-router.post('/login', csrfProtection, async (req, res) => {
+// Route de connexion avec protection contre le brute force
+router.post('/login', csrfProtection, loginRateLimit, async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -64,14 +65,24 @@ router.post('/login', csrfProtection, async (req, res) => {
     const user = await User.findOne({ where: { email: sanitizedEmail } });
 
     if (!user) {
-      return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
+      incrementLoginAttempts(req);
+      const attemptsInfo = getLoginAttemptsInfo(req);
+      return res.status(401).json({ 
+        error: 'Email ou mot de passe incorrect',
+        attemptsInfo 
+      });
     }
 
     // Vérifier le mot de passe avec le password sanitizé
     const isValidPassword = await bcrypt.compare(sanitizedPassword, user.password);
 
     if (!isValidPassword) {
-      return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
+      incrementLoginAttempts(req);
+      const attemptsInfo = getLoginAttemptsInfo(req);
+      return res.status(401).json({ 
+        error: 'Email ou mot de passe incorrect',
+        attemptsInfo 
+      });
     }
 
     // Générer le token JWT
@@ -92,6 +103,9 @@ router.post('/login', csrfProtection, async (req, res) => {
       sameSite: 'strict',
       maxAge: 60 * 60 * 1000 // 1 heure
     });
+
+    // Réinitialiser les tentatives après connexion réussie
+    resetLoginAttempts(req);
 
     res.json({ 
       success: true,
