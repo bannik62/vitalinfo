@@ -13,7 +13,7 @@
     <section>
       <h2>1. Éditeur du site</h2>
       <p>
-        Le site <strong>Vitalinfo</strong> est édité à titre personnel.
+        L'application <strong>Vitalinfo</strong> est édité à titre personnel.
       </p>
     </section>
 
