@@ -151,16 +151,16 @@
             <div class="form-group">
                 <label for="password">Mot de passe</label>
                 <div class="password-input-wrapper">
-                    <input
-                        type="password"
-                        id="password"
+                <input
+                    type="password"
+                    id="password"
                         bind:this={passwordInput}
-                        bind:value={password}
-                        placeholder="••••••••"
-                        required
-                        disabled={loading}
-                        autocomplete="current-password"
-                    />
+                    bind:value={password}
+                    placeholder="••••••••"
+                    required
+                    disabled={loading}
+                    autocomplete="current-password"
+                />
                     <button
                         type="button"
                         class="password-toggle"
