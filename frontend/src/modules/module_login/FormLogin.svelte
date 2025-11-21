@@ -8,6 +8,8 @@
     let message = "";
     let messageType = "";
     let csrfToken = null;
+    let showPassword = false;
+    let passwordInput;
 
     function handleCsrfTokenReceived(event) {
         console.log("📥 FormLogin - Événement csrfTokenReceived reçu");
@@ -92,7 +94,9 @@
     </div>
 
     <div class="login-form">
-        <h2>Connexion</h2>
+        <h2>
+        <span aria-label="robot-smiley" title="robot" style="font-size:2rem;vertical-align:middle;">🤖</span>
+        </h2>
 
         {#if message}
             <div class="message message-{messageType}">
@@ -116,15 +120,42 @@
 
             <div class="form-group">
                 <label for="password">Mot de passe</label>
-                <input
-                    type="password"
-                    id="password"
-                    bind:value={password}
-                    placeholder="••••••••"
-                    required
-                    disabled={loading}
-                    autocomplete="current-password"
-                />
+                <div class="password-input-wrapper">
+                    <input
+                        type="password"
+                        id="password"
+                        bind:this={passwordInput}
+                        bind:value={password}
+                        placeholder="••••••••"
+                        required
+                        disabled={loading}
+                        autocomplete="current-password"
+                    />
+                    <button
+                        type="button"
+                        class="password-toggle"
+                        on:click={() => {
+                            showPassword = !showPassword;
+                            if (passwordInput) {
+                                passwordInput.type = showPassword ? "text" : "password";
+                            }
+                        }}
+                        disabled={loading}
+                        aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                    >
+                        {#if showPassword}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                <line x1="1" y1="1" x2="23" y2="23"></line>
+                            </svg>
+                        {:else}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        {/if}
+                    </button>
+                </div>
             </div>
 
             <button type="submit" disabled={loading} class="submit-btn">
@@ -156,9 +187,7 @@
     .container-login-form-description p {
         text-align: center;
         margin-bottom: 50px;
-        text-decoration: underline #598792;
-        text-underline-offset: 8px;
-        text-decoration-thickness: 5px;
+
         color: #333;
         text-shadow: 3px 3px 8px rgba(207, 215, 216, 0.8), 0 0 15px rgba(89, 135, 146, 0.5);
     }
@@ -202,7 +231,9 @@
             background: #635b653f;
             padding: 0.6em 0.7em;
             border-radius: 6px;
+            border: 1px solid #008c99;
             font-size: 0.97em;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5) inset;
         }
         .ia-demo-ex span {
             font-weight: 600;
@@ -218,6 +249,7 @@
             color: #256616;
         }
     .login-form {
+        position: relative;
     background: white;
     padding: 40px;
     border-radius: 12px;
@@ -228,12 +260,30 @@
     height: 45%;
     margin-top: 50px;
     }
+    .login-form::after {
+        content: "Vitalinfo Agent IA";
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 15%;
+        background: linear-gradient(135deg, #667eea 0%, #008c99 100%);
+        border-radius: 12px 12px 0 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: white;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
 
     h2 {
-        margin: 0 0 30px 0;
-        color: #553939;
+        margin: 25px 0 25px 0;
+        color: #598792;
         font-size: clamp(22px, 3vw, 28px);
         text-align: center;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
     }
 
     .form-group {
@@ -251,7 +301,7 @@
     input {
         width: 100%;
         padding: 12px;
-        border: 2px solid #e0e0e0;
+        border: 2px solid #008c99;
         border-radius: 8px;
         font-size: clamp(14px, 1.8vw, 16px);
         font-family: inherit;
@@ -269,10 +319,55 @@
         cursor: not-allowed;
     }
 
+    .password-input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .password-input-wrapper input {
+        padding-right: 45px;
+    }
+
+    .password-toggle {
+        position: absolute;
+        right: 12px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+        transition: color 0.3s, transform 0.2s;
+        z-index: 1;
+    }
+
+    .password-toggle:hover:not(:disabled) {
+        color: #667eea;
+        transform: scale(1.1);
+    }
+
+    .password-toggle:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .password-toggle:focus {
+        outline: 2px solid #667eea;
+        outline-offset: 2px;
+        border-radius: 4px;
+    }
+
+    .password-toggle svg {
+        display: block;
+    }
+
     .submit-btn {
         width: 100%;
         padding: 14px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #667eea 0%, #008c99 100%);
         color: white;
         border: none;
         border-radius: 8px;
