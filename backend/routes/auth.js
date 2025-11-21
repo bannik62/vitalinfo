@@ -8,6 +8,39 @@ import { authenticateToken } from '../middleware/auth.js';
 const router = express.Router();
 const JWT_SECRET = 'vitalinfo-jwt-secret-key-2024';
 
+// Fonction de validation et sanitization
+function validateAndSanitizeLogin(email, password) {
+  // Sanitization: trim et normalisation
+  const sanitizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+  const sanitizedPassword = typeof password === 'string' ? password.trim() : '';
+
+  // Validation: champs requis
+  if (!sanitizedEmail || !sanitizedPassword) {
+    return { valid: false, error: 'Email et mot de passe requis' };
+  }
+
+  // Validation: longueur maximale
+  if (sanitizedEmail.length > 255) {
+    return { valid: false, error: 'Email trop long' };
+  }
+
+  if (sanitizedPassword.length > 128) {
+    return { valid: false, error: 'Mot de passe trop long' };
+  }
+
+  // Validation: format email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(sanitizedEmail)) {
+    return { valid: false, error: 'Format d\'email invalide' };
+  }
+
+  return { 
+    valid: true, 
+    email: sanitizedEmail, 
+    password: sanitizedPassword 
+  };
+}
+
 // Route pour obtenir le token CSRF (génération sans vérification)
 router.get('/csrf-token', csrfTokenGenerator, (req, res) => {
   res.json({ csrfToken: req.csrfToken() });
@@ -18,19 +51,24 @@ router.post('/login', csrfProtection, async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email et mot de passe requis' });
+    // Validation et sanitization
+    const validation = validateAndSanitizeLogin(email, password);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.error });
     }
 
-    // Trouver l'utilisateur
-    const user = await User.findOne({ where: { email } });
+    const sanitizedEmail = validation.email;
+    const sanitizedPassword = validation.password;
+
+    // Trouver l'utilisateur avec l'email sanitizé
+    const user = await User.findOne({ where: { email: sanitizedEmail } });
 
     if (!user) {
       return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
     }
 
-    // Vérifier le mot de passe
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    // Vérifier le mot de passe avec le password sanitizé
+    const isValidPassword = await bcrypt.compare(sanitizedPassword, user.password);
 
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
