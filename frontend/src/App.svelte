@@ -1,10 +1,28 @@
 <script>
+  import { onMount } from 'svelte';
   import SecureSession from './modules/security/module_session/SecureSession.svelte';
   import PageLogin from './pages/login/Login.svelte';
   import Board from './modules/module_board/Board.svelte';
+  import MentionsLegales from './pages/MentionsLegales.svelte';
   
   let isAuthenticated = false;
   let loading = true;
+  let showMentionsLegales = false;
+
+  function checkHash() {
+    if (typeof window !== 'undefined') {
+      showMentionsLegales = window.location.hash === '#mentions-legales';
+    }
+  }
+
+  onMount(() => {
+    checkHash();
+    // Écouter les changements d'URL
+    window.addEventListener('hashchange', checkHash);
+    return () => {
+      window.removeEventListener('hashchange', checkHash);
+    };
+  });
 
   function handleSessionChecked(event) {
     console.log('App.svelte - Événement reçu:', event);
@@ -29,6 +47,8 @@
 
 {#if loading}
   <div class="loading">Chargement...</div>
+  {:else if showMentionsLegales}
+    <MentionsLegales />
   {:else}
     <main>
       {#if isAuthenticated}
@@ -40,7 +60,7 @@
         </a>
       {/if}
     </main>
-{/if}
+  {/if}
 <style>
   .loading {
     position: fixed;
