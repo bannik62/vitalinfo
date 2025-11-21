@@ -130,7 +130,8 @@
         { message: chatInput },
         {
           headers: { 'X-CSRF-Token': csrfToken },
-          withCredentials: true
+          withCredentials: true,
+          timeout: 60000 // 60 secondes pour laisser le temps à n8n de répondre
         }
       );
 
