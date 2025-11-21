@@ -4,6 +4,7 @@ import FormLogin from '../../modules/module_login/FormLogin.svelte';
 
 <section>
   <FormLogin />
+  <a href="#mentions-legales" class="mentions-link">Mentions légales</a>
 </section>
 
 
@@ -52,5 +53,30 @@ background: radial-gradient(circle, rgba(2, 0, 36, 1) 0%, rgba(9, 9, 121, 1) 20%
     /* Extra Large Desktop (1440px et plus) */
     @media (min-width: 1440px) {
         
+    }
+
+    .mentions-link {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        font-size: clamp(11px, 1.1vw, 13px);
+        transition: all 0.3s ease;
+        z-index: 1000;
+    }
+
+    .mentions-link:hover {
+        color: rgba(255, 255, 255, 1);
+        text-decoration: underline;
+    }
+
+    /* Mobile */
+    @media (max-width: 575.98px) {
+        .mentions-link {
+            bottom: 60px;
+            left: 20px;
+            font-size: clamp(10px, 2vw, 12px);
+        }
     }
 </style>

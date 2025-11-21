@@ -206,7 +206,7 @@ router.post(
           }
         },
         {
-          timeout: 30_000
+          timeout: 60_000 // 60 secondes pour laisser le temps à n8n de répondre
         }
       );
 
