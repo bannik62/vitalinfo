@@ -196,18 +196,9 @@
         {#if attemptsInfo && attemptsInfo.attempts > 0}
             <div class="attempts-info">
                 {#if attemptsInfo.blocked}
-                    <div class="attempts-blocked">
-                        <strong>⚠️ IP bloquée</strong>
-                        <p>Votre adresse IP a été temporairement bloquée après {attemptsInfo.attempts} tentatives échouées.</p>
-                        <p>Veuillez réessayer dans <strong>{attemptsInfo.remainingMinutes} minute(s)</strong>.</p>
-                    </div>
+                    <span class="attempts-blocked">⚠️ IP bloquée - Réessayez dans {attemptsInfo.remainingMinutes} min</span>
                 {:else}
-                    <div class="attempts-warning">
-                        <strong>⚠️ Tentatives restantes : {attemptsInfo.remaining} / 5</strong>
-                        {#if attemptsInfo.attempts > 0}
-                            <p>{attemptsInfo.attempts} tentative(s) échouée(s). Attention, après 5 tentatives, votre IP sera bloquée pendant 15 minutes.</p>
-                        {/if}
-                    </div>
+                    <span class="attempts-warning">⚠️ {attemptsInfo.remaining} / 5 tentatives restantes</span>
                 {/if}
             </div>
         {/if}
@@ -459,44 +450,20 @@
     }
 
     .attempts-info {
-        margin-top: 20px;
-        padding: 12px 16px;
-        border-radius: 8px;
-        font-size: clamp(11px, 1.3vw, 13px);
+        margin-top: 10px;
+        text-align: center;
     }
 
     .attempts-warning {
-        background-color: #fff3cd;
         color: #856404;
-        border: 1px solid #ffeaa7;
-    }
-
-    .attempts-warning strong {
-        display: block;
-        margin-bottom: 8px;
-        font-size: clamp(12px, 1.4vw, 14px);
-    }
-
-    .attempts-warning p {
-        margin: 4px 0 0 0;
-        line-height: 1.4;
+        font-size: clamp(10px, 1vw, 11px);
+        font-weight: 400;
     }
 
     .attempts-blocked {
-        background-color: #f8d7da;
         color: #721c24;
-        border: 1px solid #f5c6cb;
-    }
-
-    .attempts-blocked strong {
-        display: block;
-        margin-bottom: 8px;
-        font-size: clamp(12px, 1.4vw, 14px);
-    }
-
-    .attempts-blocked p {
-        margin: 4px 0;
-        line-height: 1.4;
+        font-size: clamp(10px, 1vw, 11px);
+        font-weight: 400;
     }
 
     /* Mobile (jusqu'à 576px) */
