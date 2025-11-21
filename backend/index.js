@@ -11,6 +11,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Configuration pour récupérer la vraie IP du client (important avec Docker/reverse proxy)
+app.set('trust proxy', true);
+
 // Middleware
 app.use(cors({
   origin: 'http://localhost:5173',
