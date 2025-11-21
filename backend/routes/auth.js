@@ -65,8 +65,8 @@ router.post('/login', csrfProtection, loginRateLimit, async (req, res) => {
     const user = await User.findOne({ where: { email: sanitizedEmail } });
 
     if (!user) {
-      incrementLoginAttempts(req);
-      const attemptsInfo = getLoginAttemptsInfo(req);
+      await incrementLoginAttempts(req);
+      const attemptsInfo = await getLoginAttemptsInfo(req);
       return res.status(401).json({ 
         error: 'Email ou mot de passe incorrect',
         attemptsInfo 
@@ -77,8 +77,8 @@ router.post('/login', csrfProtection, loginRateLimit, async (req, res) => {
     const isValidPassword = await bcrypt.compare(sanitizedPassword, user.password);
 
     if (!isValidPassword) {
-      incrementLoginAttempts(req);
-      const attemptsInfo = getLoginAttemptsInfo(req);
+      await incrementLoginAttempts(req);
+      const attemptsInfo = await getLoginAttemptsInfo(req);
       return res.status(401).json({ 
         error: 'Email ou mot de passe incorrect',
         attemptsInfo 
@@ -105,7 +105,7 @@ router.post('/login', csrfProtection, loginRateLimit, async (req, res) => {
     });
 
     // Réinitialiser les tentatives après connexion réussie
-    resetLoginAttempts(req);
+    await resetLoginAttempts(req);
 
     res.json({ 
       success: true,
