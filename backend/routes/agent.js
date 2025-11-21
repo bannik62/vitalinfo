@@ -294,7 +294,7 @@ router.post('/errors', assertN8NSecret, (req, res) => {
   return res.json({ success: true, message: 'Erreur enregistrée' });
 });
 
-router.get('/errors/latest', authenticateToken, (req, res) => {
+router.get('/agent/errors/latest', authenticateToken, (req, res) => {
   const userId = req.user?.id || 'global';
   const errors = errorStore.get(userId) || [];
   

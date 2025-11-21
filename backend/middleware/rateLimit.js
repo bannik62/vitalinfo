@@ -45,15 +45,54 @@ async function cleanExpiredAttempts() {
 
 /**
  * Obtient l'adresse IP du client
+ * Gère les cas avec reverse proxy, load balancer, Docker, etc.
  */
 function getClientIP(req) {
-  return (
-    req.ip ||
-    req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
-    req.headers['x-real-ip'] ||
-    req.connection?.remoteAddress ||
-    'unknown'
-  );
+  // Avec trust proxy activé, req.ip devrait déjà contenir la bonne IP
+  // Mais on vérifie quand même les headers au cas où
+  
+  // X-Forwarded-For peut contenir plusieurs IPs séparées par des virgules
+  // La première est généralement l'IP du client réel
+  const xForwardedFor = req.headers['x-forwarded-for'];
+  if (xForwardedFor) {
+    const ips = xForwardedFor.split(',').map(ip => ip.trim());
+    // Ignorer les IPs privées Docker (172.x.x.x, 10.x.x.x, 192.168.x.x)
+    for (const ip of ips) {
+      if (!ip.startsWith('172.') && !ip.startsWith('10.') && !ip.startsWith('192.168.')) {
+        return ip;
+      }
+    }
+    // Si toutes sont privées, prendre la première
+    if (ips.length > 0) {
+      return ips[0];
+    }
+  }
+  
+  // X-Real-IP (nginx)
+  const xRealIp = req.headers['x-real-ip'];
+  if (xRealIp && !xRealIp.startsWith('172.') && !xRealIp.startsWith('10.') && !xRealIp.startsWith('192.168.')) {
+    return xRealIp.trim();
+  }
+  
+  // req.ip (fonctionne si trust proxy est activé)
+  if (req.ip && req.ip !== '::ffff:127.0.0.1' && !req.ip.startsWith('172.') && !req.ip.startsWith('10.') && !req.ip.startsWith('192.168.')) {
+    return req.ip;
+  }
+  
+  // Fallback sur connection.remoteAddress
+  const remoteAddress = req.connection?.remoteAddress || req.socket?.remoteAddress;
+  if (remoteAddress && !remoteAddress.startsWith('172.') && !remoteAddress.startsWith('10.') && !remoteAddress.startsWith('192.168.')) {
+    return remoteAddress;
+  }
+  
+  // Si on n'a que des IPs privées, prendre la dernière de X-Forwarded-For (généralement le client)
+  if (xForwardedFor) {
+    const ips = xForwardedFor.split(',').map(ip => ip.trim());
+    return ips[ips.length - 1];
+  }
+  
+  // Dernier recours
+  return req.ip || remoteAddress || 'unknown';
 }
 
 /**
