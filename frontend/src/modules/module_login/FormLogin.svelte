@@ -22,9 +22,35 @@
         );
     }
 
+    function validateEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
     async function handleLogin() {
-        if (!email.trim() || !password.trim()) {
+        const trimmedEmail = email.trim();
+        const trimmedPassword = password.trim();
+
+        if (!trimmedEmail || !trimmedPassword) {
             message = "Veuillez remplir tous les champs";
+            messageType = "error";
+            return;
+        }
+
+        if (!validateEmail(trimmedEmail)) {
+            message = "Format d'email invalide";
+            messageType = "error";
+            return;
+        }
+
+        if (trimmedEmail.length > 255) {
+            message = "Email trop long";
+            messageType = "error";
+            return;
+        }
+
+        if (trimmedPassword.length > 128) {
+            message = "Mot de passe trop long";
             messageType = "error";
             return;
         }
@@ -42,8 +68,8 @@
             const response = await axios.post(
                 "/api/auth/login",
                 {
-                    email,
-                    password,
+                    email: trimmedEmail.toLowerCase(),
+                    password: trimmedPassword,
                 },
                 {
                     headers: {

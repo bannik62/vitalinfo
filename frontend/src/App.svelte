@@ -35,10 +35,10 @@
         <Board />
       {:else}
         <PageLogin />
+        <a href="https://codeurbase.fr" target="_blank" rel=" noreferrer" class="codeurbase-link">
+          Powered by codeurbase.fr
+        </a>
       {/if}
-      <a href="https://codeurbase.fr" target="_blank" rel=" noreferrer" class="codeurbase-link">
-        Powered by codeurbase.fr
-      </a>
     </main>
 {/if}
 <style>
