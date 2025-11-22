@@ -11,25 +11,13 @@
         withCredentials: true
       });
       
-      console.log('🔍 Réponse CSRF complète:', response);
-      console.log('🔍 Status:', response.status);
-      console.log('🔍 Data:', response.data);
-      
       if (response.status === 200 && response.data?.csrfToken) {
         csrfToken = response.data.csrfToken;
-        console.log('✅ Token CSRF récupéré:', csrfToken);
-      } else {
-        console.log('❌ Erreur lors de la récupération du token CSRF - réponse invalide');
-        console.log('❌ Response data:', response.data);
       }
     } catch (error) {
-      console.error('❌ Erreur CSRF:', error);
-      console.error('❌ Status:', error.response?.status);
-      console.error('❌ Message:', error.message);
-      console.error('❌ Data:', error.response?.data);
+      // Erreur silencieuse
     } finally {
       // Dispatch l'événement avec le token CSRF
-      console.log('📤 Dispatch csrfTokenReceived avec:', csrfToken);
       dispatch('csrfTokenReceived', csrfToken);
     }
   }

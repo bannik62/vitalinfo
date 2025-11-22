@@ -13,14 +13,7 @@
     let attemptsInfo = null;
 
     function handleCsrfTokenReceived(event) {
-        console.log("📥 FormLogin - Événement csrfTokenReceived reçu");
-        console.log("📥 FormLogin - event:", event);
-        console.log("📥 FormLogin - event.detail:", event.detail);
         csrfToken = event.detail;
-        console.log(
-            "📥 FormLogin - Token CSRF assigné:",
-            csrfToken ? "Oui (" + csrfToken + ")" : "Non"
-        );
     }
 
     function validateEmail(email) {

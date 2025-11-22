@@ -19,24 +19,18 @@
         }
       });
       
-      console.log('Réponse verify:', response.status, response.data);
-      
       // Vérifie strictement : statut 200 ET authenticated === true
       if (response.status === 200 && response.data?.authenticated === true) {
         isAuthenticated = true;
-        console.log('✅ Authentifié: true');
       } else {
         // Si statut 401, 403 ou authenticated !== true, pas authentifié
         isAuthenticated = false;
-        console.log('❌ Non authentifié: false');
       }
     } catch (error) {
       // Toute erreur = pas authentifié
       isAuthenticated = false;
-      console.log('❌ Erreur, non authentifié:', error.response?.status || error.message);
     } finally {
       loading = false;
-      console.log('Dispatch sessionChecked avec:', isAuthenticated);
       // Dispatch l'événement avec le booléen
       dispatch('sessionChecked', isAuthenticated);
     }
