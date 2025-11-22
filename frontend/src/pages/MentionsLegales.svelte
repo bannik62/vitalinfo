@@ -140,7 +140,6 @@
   @media (max-width: 575.98px) {
     .mentions-legales-container {
       padding: 15px;
-      background-color: rgb(197, 223, 235);
     }
 
     .mentions-content {

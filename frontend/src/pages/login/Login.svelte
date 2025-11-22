@@ -29,7 +29,6 @@ import FormLogin from '../../modules/module_login/FormLogin.svelte';
         justify-content: center;
         height: 100%;
         width: 100%;
-        background-color: rgb(197, 223, 235);
     }
     }
 
@@ -59,24 +58,43 @@ import FormLogin from '../../modules/module_login/FormLogin.svelte';
         position: fixed;
         bottom: 20px;
         left: 20px;
-        color: rgba(255, 255, 255, 0.8);
+        color: rgb(146, 146, 195);
         text-decoration: none;
-        font-size: clamp(11px, 1.1vw, 13px);
+        font-size: clamp(12px, 1.2vw, 14px);
+        font-weight: 500;
+        padding: 8px 16px;
+        border-radius: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         transition: all 0.3s ease;
         z-index: 1000;
     }
 
     .mentions-link:hover {
-        color: rgba(255, 255, 255, 1);
-        text-decoration: underline;
+        background: rgba(255, 255, 255, 1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        transform: translateY(-2px);
     }
 
-    /* Mobile */
+    .mentions-link::before {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: -2px;
+        width: 8px;
+        height: 8px;
+        background: #667eea;
+        border-radius: 50%;
+        opacity: 0.6;
+    }
+
+    /* Mobile - Lien en haut */
     @media (max-width: 575.98px) {
         .mentions-link {
-            bottom: 60px;
+            bottom: auto;
+            top: 20px;
             left: 20px;
             font-size: clamp(10px, 2vw, 12px);
+            padding: 6px 12px;
         }
     }
 </style>
