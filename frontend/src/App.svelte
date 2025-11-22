@@ -86,7 +86,7 @@
     position: fixed;
     bottom: 20px;
     right: 20px;
-    color: rgba(9, 9, 121, 1);
+    color: rgb(146, 146, 195);
     text-decoration: none;
     font-size: clamp(12px, 1.2vw, 14px);
     font-weight: 500;
