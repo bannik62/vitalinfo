@@ -489,14 +489,16 @@
         .container-login-form-description {
             margin-top: 10vh;
             height: 90%;
+            
         }
         
         .login-form {
-            padding: 20px;
+            padding: 40px;
             max-width: 100%;
             min-width: auto;
             margin: 0 10px;
             height: 23%;
+            margin-bottom: 10px;
         }
         
         h2 {
@@ -545,7 +547,6 @@
         font-size: 24px;
         font-weight: bold;
         margin-bottom: 20px;
-        color: #333;
         width: 60%;
     }
         
@@ -557,7 +558,6 @@
         font-size: 24px;
         font-weight: bold;
         margin-bottom: 20px;
-        color: #333;
         width: 60%;
     }
     }
