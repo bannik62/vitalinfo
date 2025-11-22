@@ -25,18 +25,10 @@
   });
 
   function handleSessionChecked(event) {
-    console.log('App.svelte - Événement reçu:', event);
-    console.log('App.svelte - event.detail:', event.detail);
-    console.log('App.svelte - Type de event.detail:', typeof event.detail);
-    
     const authValue = Boolean(event.detail);
-    console.log('App.svelte - authValue (Boolean):', authValue);
     
     isAuthenticated = authValue;
     loading = false;
-    
-    console.log('App.svelte - isAuthenticated après assignation:', isAuthenticated);
-    console.log('App.svelte - Affichera:', isAuthenticated ? 'Board' : 'PageLogin');
   }
 </script>
 
