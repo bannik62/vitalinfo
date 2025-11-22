@@ -16,7 +16,7 @@ import FormLogin from '../../modules/module_login/FormLogin.svelte';
         min-height: 100vh;
         width: 100%;
         background: #020024;
-background: radial-gradient(circle, rgba(2, 0, 36, 1) 0%, rgba(9, 9, 121, 1) 20%, rgba(0, 212, 255, 1) 100%);
+/* background: radial-gradient(circle, rgba(2, 0, 36, 1) 0%, rgba(9, 9, 121, 1) 20%, rgba(0, 212, 255, 1) 100%); */
     }
 
 

@@ -108,16 +108,16 @@
     <div class="container-login-form-description-text">
         <p class="italiana-regular">Connexion à Vitalinfo</p>
     <div class="ia-agent-demo">
-        <h3 class="italiana-regular">  l’agent IA administratif</h3>
+        <h3 class="italiana_regular_sans_serif">  l’agent IA administratif</h3>
         <ul>
-            <li class="italiana-regular"><strong>Classe les documents</strong> automatiquement</li>
-            <li class="italiana-regular"><strong>Stocke en base de données</strong> pour une organisation parfaite</li>
-            <li class="italiana-regular"><strong>Répondez à vos questions</strong> sur les documents (“Où est la facture EDF ?”, “Combien de dépenses en 2023 ?”…)</li>
+            <li class="italiana_regular_sans_serif"><strong>Classe les documents</strong> automatiquement</li>
+            <li class="italiana_regular_sans_serif"><strong>Stocke en base de données</strong> pour une organisation parfaite</li>
+            <li class="italiana_regular_sans_serif"><strong>Répondez à vos questions</strong> sur les documents (“Où est la facture EDF ?”, “Combien de dépenses en 2023 ?”…)</li>
         </ul>
         <div class="ia-demo-ex">
             <span class="italiana-regular">Exemple :</span>
             <div class="ia-question">Q : Quels documents sont liés aux assurances ?</div>
-            <div class="ia-reponse">R : 3 documents trouvés : “Contrat Assurance Auto.pdf”, “Facture Mutuelle 2024.pdf”, “Reçu Maison Assurée.jpg”…</div>
+            <div class="ia-reponse share-tech-regular ">R : 3 documents trouvés : “Contrat Assurance Auto.pdf”, “Facture Mutuelle 2024.pdf”, “Reçu Maison Assurée.jpg”…</div>
         </div>
     </div>
 
@@ -212,6 +212,16 @@
   font-weight: 600;
   font-style: normal;
 }
+.italiana_regular_sans_serif {
+  font-family: "Italiana";
+  font-weight: 400;
+  font-style: normal;
+}
+.share-tech-regular {
+  font-family: "Share Tech";
+  font-weight: 400;
+  font-style: normal;
+}
 
     .container-login-form-description {
         display: flex;
@@ -227,9 +237,8 @@
     .container-login-form-description p {
         text-align: center;
         margin-bottom: 50px;
-
-        color: #333;
-        text-shadow: 3px 3px 8px rgba(207, 215, 216, 0.8), 0 0 15px rgba(89, 135, 146, 0.5);
+        color: #33333394;
+        text-shadow: 3px 3px rgba(169, 215, 222, 0.8), 0 0 15px rgba(89, 135, 146, 0.5);
     }
     .container-login-form-description-text {
         font-size: clamp(18px, 2.5vw, 24px);
@@ -244,7 +253,7 @@
             border-radius: 8px;
             padding: 1.2rem 1rem;
             line-height: 1.5;
-            color: #0b5082;
+            color: #133751;
             width: 100%;
         }
 
@@ -252,8 +261,9 @@
         .ia-agent-demo h3 {
             margin-top: 0;
             font-size:clamp(1.2rem, 9vw, 3.1rem); 
-            color: #598792;
+            color: #133751;
             font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
         }
         p {
             font-size:clamp(1.2rem, 9vw, 3.1rem); 
@@ -271,7 +281,7 @@
             background: #635b653f;
             padding: 0.6em 0.7em;
             border-radius: 6px;
-            border: 1px solid #008c99;
+            border: 3px solid #070B14;
             font-size: 0.97em;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.5) inset;
         }
@@ -282,11 +292,13 @@
         .ia-question {
             margin-top: 0.25em;
             font-weight: 500;
-            color: #4c3502;
+            color: #996a05;
+            font-weight: 600;
         }
         .ia-reponse {
             margin-top: 0.25em;
-            color: #256616;
+            color: #4a9d23;
+            font-weight: 600;
         }
     .login-form {
         position: relative;
@@ -310,7 +322,7 @@
         left: 0;
         width: 100%;
         height: 15%;
-        background: linear-gradient(135deg, #667eea 0%, #008c99 100%);
+        background: #020024;
         border-radius: 12px 12px 0 0;
         font-size: 18px;
         font-weight: 600;
@@ -341,12 +353,18 @@
     input {
         width: 100%;
         padding: 12px;
-        border: 2px solid #008c99;
+        border: 2px solid #070B14;
         border-radius: 8px;
         font-size: clamp(14px, 1.8vw, 16px);
         font-family: inherit;
         transition: border-color 0.3s;
         box-sizing: border-box;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5) inset;
+  
+    }
+
+    input::placeholder {
+        color: #5a70a3;
     }
 
     input:focus {
@@ -407,7 +425,7 @@
     .submit-btn {
         width: 100%;
         padding: 14px;
-        background: linear-gradient(135deg, #667eea 0%, #008c99 100%);
+        background: #020024;
         color: white;
         border: none;
         border-radius: 8px;
