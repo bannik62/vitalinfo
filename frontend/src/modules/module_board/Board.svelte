@@ -621,7 +621,14 @@
           {#each chatHistory as item, index (index)}
             <div class="chat-message {item.from === 'Vous' ? 'from-user' : 'from-agent'}">
               <div class="message-header">
-                <div class="sender">{item.from}</div>
+                <div class="sender">
+                  {#if item.from === 'Vous'}
+                    <span class="sender-icon">👤</span>
+                  {:else}
+                    <span class="sender-icon">🤖</span>
+                  {/if}
+                  {item.from}
+                </div>
                 {#if item.isUser && item.id}
                   <button 
                     class="delete-btn" 
@@ -1100,6 +1107,15 @@
     font-size: clamp(10px, 1.2vw, 11px);
     letter-spacing: 0.08em;
     opacity: 0.7;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .sender-icon {
+    font-size: clamp(12px, 1.4vw, 14px);
+    line-height: 1;
+    display: inline-block;
   }
 
   .delete-btn {
