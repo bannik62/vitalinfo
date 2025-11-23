@@ -5,6 +5,7 @@ import FormData from 'form-data';
 import { Readable } from 'stream';
 import { authenticateToken } from '../middleware/auth.js';
 import csrfProtection from '../middleware/csrf.js';
+import ChatConversation from '../models/ChatConversation.mjs';
 
 const router = express.Router();
 
@@ -213,6 +214,19 @@ router.post(
       // Accepter soit 'answer' soit 'output' de n8n
       const agentAnswer = response.data?.answer || response.data?.output;
 
+      // Sauvegarder la conversation en base de données
+      try {
+        await ChatConversation.create({
+          user_id: req.user?.id,
+          user_message: message.trim(),
+          agent_response: agentAnswer || "Réponse reçue de l'agent IA."
+        });
+        console.log('✅ Conversation sauvegardée en base');
+      } catch (dbError) {
+        console.error('❌ Erreur lors de la sauvegarde de la conversation:', dbError.message);
+        // On continue même si la sauvegarde échoue, on retourne quand même la réponse
+      }
+
       return res.json({
         answer: agentAnswer || "Réponse reçue de l'agent IA."
       });
@@ -307,6 +321,94 @@ router.get('/agent/errors/latest', authenticateToken, (req, res) => {
   }
   
   return res.json({ error: null });
+});
+
+// Route pour récupérer l'historique des conversations (10 dernières)
+router.get('/agent/chat/history', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Utilisateur non identifié.' });
+    }
+
+    const conversations = await ChatConversation.findAll({
+      where: {
+        user_id: userId
+      },
+      order: [['createdAt', 'DESC']],
+      limit: 10
+    });
+
+    // Transformer les données pour le frontend
+    const history = conversations.map(conv => ({
+      id: conv.id,
+      userMessage: {
+        from: 'Vous',
+        text: conv.user_message
+      },
+      agentMessage: {
+        from: 'Agent IA',
+        text: conv.agent_response
+      },
+      createdAt: conv.createdAt
+    }));
+
+    return res.json({ history });
+  } catch (error) {
+    console.error('❌ Erreur lors de la récupération de l\'historique:', error.message);
+    return res.status(500).json({ 
+      error: 'Erreur lors de la récupération de l\'historique.' 
+    });
+  }
+});
+
+// Route pour supprimer une conversation
+router.delete('/agent/chat/:id', authenticateToken, csrfProtection, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.id;
+
+    if (!id) {
+      return res.status(400).json({ error: 'ID de conversation requis.' });
+    }
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Utilisateur non identifié.' });
+    }
+
+    // Vérifier que la conversation appartient à l'utilisateur
+    const conversation = await ChatConversation.findOne({
+      where: {
+        id: id,
+        user_id: userId
+      }
+    });
+
+    if (!conversation) {
+      return res.status(404).json({ error: 'Conversation non trouvée ou accès non autorisé.' });
+    }
+
+    // Supprimer la conversation (la paire question/réponse)
+    await ChatConversation.destroy({
+      where: {
+        id: id,
+        user_id: userId
+      }
+    });
+
+    console.log('✅ Conversation supprimée:', id);
+    
+    return res.json({ 
+      success: true,
+      message: 'Conversation supprimée avec succès.'
+    });
+  } catch (error) {
+    console.error('❌ Erreur lors de la suppression de la conversation:', error.message);
+    return res.status(500).json({ 
+      error: 'Erreur lors de la suppression de la conversation.' 
+    });
+  }
 });
 
 router.get('/docs/latest', authenticateToken, async (req, res) => {
