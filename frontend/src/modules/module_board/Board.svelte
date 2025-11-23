@@ -151,9 +151,12 @@
 
       const history = response.data?.history || [];
       
+      // Inverser l'ordre pour avoir les plus anciennes en haut
+      const reversedHistory = [...history].reverse();
+      
       // Transformer l'historique en format plat pour l'affichage
       const flatHistory = [];
-      history.forEach(conv => {
+      reversedHistory.forEach(conv => {
         flatHistory.push({
           id: conv.id,
           from: conv.userMessage.from,
