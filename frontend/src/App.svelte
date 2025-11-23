@@ -19,6 +19,19 @@
     checkHash();
     // Écouter les changements d'URL
     window.addEventListener('hashchange', checkHash);
+    
+    // Enregistrer le Service Worker pour PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('/service-worker.js')
+        .then((registration) => {
+          console.log('Service Worker enregistré:', registration);
+        })
+        .catch((error) => {
+          console.error('Erreur enregistrement Service Worker:', error);
+        });
+    }
+    
     return () => {
       window.removeEventListener('hashchange', checkHash);
     };
