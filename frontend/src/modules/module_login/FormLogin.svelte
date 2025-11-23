@@ -228,12 +228,15 @@
         box-shadow: -10px 10px 66px rgba(79, 99, 130, 0.7) inset
     }
     .container-login-form-description p {
-        text-align: center;
-        margin-bottom: 50px;
-        color: #133751;
-        text-shadow: 3px 3px rgba(169, 215, 222, 0.8), 0 0 15px rgba(89, 135, 146, 0.5);
-        font-size: clamp(2svw, 4.5vw, 300px);
-    }
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: #133751;
+    font-size: clamp(30px, 3.5vw, 300px);
+}
+
+
     .container-login-form-description-text {
         font-size: clamp(18px, 2.5vw, 24px);
         font-weight: bold;
