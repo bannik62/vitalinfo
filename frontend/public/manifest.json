@@ -1,0 +1,25 @@
+{
+  "name": "Vitalinfo",
+  "short_name": "Vitalinfo",
+  "description": "Agent IA administratif pour classer, stocker et rechercher vos documents",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#05070e",
+  "theme_color": "#152238",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/robot_face.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/robot_face.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
+
