@@ -211,6 +211,9 @@ router.post(
         }
       );
 
+      // Log la réponse complète de n8n pour voir ce qui est renvoyé
+      console.log('📊 Réponse complète de n8n:', JSON.stringify(response.data, null, 2));
+
       // Accepter soit 'answer' soit 'output' de n8n
       const agentAnswer = response.data?.answer || response.data?.output;
 

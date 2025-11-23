@@ -214,12 +214,14 @@
       chatHistory = [...chatHistory, agentReply];
       scrollToBottom();
       
-      // Recharger l'historique pour avoir les IDs corrects
-      await loadChatHistory();
+      // Ne pas recharger l'historique ici - les messages sont déjà affichés
+      // L'historique sera rechargé au prochain démarrage de la page
     } catch (error) {
       chatMessage =
         error.response?.data?.error ||
         "Impossible de contacter l'agent pour le moment.";
+      // En cas d'erreur, retirer le message utilisateur qui n'a pas été sauvegardé
+      chatHistory = chatHistory.filter(msg => msg !== userMessage);
     } finally {
       chatLoading = false;
     }
