@@ -44,6 +44,7 @@
     csrfToken = event.detail;
     fetchLatestDocs();
     startErrorPolling();
+    loadChatHistory();
   }
 
   function handleFileChange(event) {
@@ -107,6 +108,39 @@
     }
   }
 
+  async function loadChatHistory() {
+    try {
+      const response = await axios.get('/api/agent/chat/history', {
+        withCredentials: true
+      });
+
+      const history = response.data?.history || [];
+      
+      // Transformer l'historique en format plat pour l'affichage
+      const flatHistory = [];
+      history.forEach(conv => {
+        flatHistory.push({
+          id: conv.id,
+          from: conv.userMessage.from,
+          text: conv.userMessage.text,
+          isUser: true
+        });
+        flatHistory.push({
+          id: conv.id, // Même id pour lier la paire
+          from: conv.agentMessage.from,
+          text: conv.agentMessage.text,
+          isUser: false
+        });
+      });
+      
+      chatHistory = flatHistory;
+      scrollToBottom();
+    } catch (error) {
+      console.error('Erreur lors du chargement de l\'historique:', error);
+      // On continue même si l'historique ne charge pas
+    }
+  }
+
   async function sendChatMessage() {
     if (!chatInput.trim()) {
       chatMessage = 'Merci de saisir une question.';
@@ -118,16 +152,18 @@
       return;
     }
 
-    const userMessage = { from: 'Vous', text: chatInput };
+    const userMessage = { from: 'Vous', text: chatInput, isUser: true };
     chatHistory = [...chatHistory, userMessage];
 
     chatLoading = true;
     chatMessage = '';
+    const messageToSend = chatInput;
+    chatInput = '';
 
     try {
       const response = await axios.post(
         '/api/agent/chat',
-        { message: chatInput },
+        { message: messageToSend },
         {
           headers: { 'X-CSRF-Token': csrfToken },
           withCredentials: true,
@@ -137,17 +173,41 @@
 
       const agentReply = {
         from: 'Agent IA',
-        text: response.data?.answer || 'Réponse reçue.'
+        text: response.data?.answer || 'Réponse reçue.',
+        isUser: false
       };
       chatHistory = [...chatHistory, agentReply];
-      chatInput = '';
       scrollToBottom();
+      
+      // Recharger l'historique pour avoir les IDs corrects
+      await loadChatHistory();
     } catch (error) {
       chatMessage =
         error.response?.data?.error ||
         "Impossible de contacter l'agent pour le moment.";
     } finally {
       chatLoading = false;
+    }
+  }
+
+  async function deleteConversation(conversationId) {
+    if (!csrfToken) {
+      chatMessage = 'Token CSRF indisponible. Rechargez la page.';
+      return;
+    }
+
+    try {
+      await axios.delete(`/api/agent/chat/${conversationId}`, {
+        headers: { 'X-CSRF-Token': csrfToken },
+        withCredentials: true
+      });
+
+      // Recharger l'historique après suppression
+      await loadChatHistory();
+    } catch (error) {
+      chatMessage =
+        error.response?.data?.error ||
+        "Erreur lors de la suppression de la conversation.";
     }
   }
 
@@ -518,7 +578,18 @@
         {:else}
           {#each chatHistory as item, index (index)}
             <div class="chat-message {item.from === 'Vous' ? 'from-user' : 'from-agent'}">
-              <div class="sender">{item.from}</div>
+              <div class="message-header">
+                <div class="sender">{item.from}</div>
+                {#if item.isUser && item.id}
+                  <button 
+                    class="delete-btn" 
+                    on:click={() => deleteConversation(item.id)}
+                    title="Supprimer cette conversation"
+                  >
+                    🗑️
+                  </button>
+                {/if}
+              </div>
               <p class="chat-text">{@html formatMessageWithLinks(item.text)}</p>
             </div>
           {/each}
@@ -938,14 +1009,41 @@
     max-width: 100%;
     overflow-wrap: break-word;
     word-wrap: break-word;
+    position: relative;
+  }
+
+  .message-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
   }
 
   .chat-message .sender {
     text-transform: uppercase;
     font-size: clamp(10px, 1.2vw, 11px);
     letter-spacing: 0.08em;
-    margin-bottom: 8px;
     opacity: 0.7;
+  }
+
+  .delete-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: clamp(14px, 1.8vw, 16px);
+    padding: 4px 8px;
+    opacity: 0.6;
+    transition: opacity 0.2s, transform 0.2s;
+    line-height: 1;
+  }
+
+  .delete-btn:hover {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+
+  .delete-btn:active {
+    transform: scale(0.95);
   }
 
   .chat-message p {
