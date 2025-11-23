@@ -48,10 +48,45 @@
   }
 
   function handleFileChange(event) {
-    const [file] = event.target.files;
+    const files = event.target.files;
+    
+    // Limiter à 1 fichier maximum
+    if (files.length > 1) {
+      uploadMessage = 'Veuillez sélectionner un seul fichier PDF.';
+      uploadMessageType = 'error';
+      if (fileInput) {
+        fileInput.value = '';
+      }
+      return;
+    }
+    
+    const [file] = files;
+    
+    // Vérifier que c'est un PDF
+    if (file && file.type !== 'application/pdf') {
+      uploadMessage = 'Seuls les fichiers PDF sont autorisés.';
+      uploadMessageType = 'error';
+      if (fileInput) {
+        fileInput.value = '';
+      }
+      selectedFile = null;
+      return;
+    }
+    
     selectedFile = file;
     uploadedFileName = null; // Réinitialiser le nom du fichier uploadé
     uploadMessage = '';
+    uploadMessageType = '';
+  }
+
+  function clearUploadForm() {
+    selectedFile = null;
+    uploadedFileName = null;
+    uploadMessage = '';
+    uploadMessageType = '';
+    if (fileInput) {
+      fileInput.value = '';
+    }
   }
 
   async function uploadDocument() {
@@ -558,9 +593,16 @@
           {/if}
         </label>
 
-        <button class="submit-btn" on:click={uploadDocument} disabled={uploadLoading}>
-          {uploadLoading ? 'Transmission…' : 'Envoyer vers n8n'}
-        </button>
+        <div class="upload-actions">
+          {#if selectedFile && !uploadLoading}
+            <button class="cancel-btn" on:click={clearUploadForm} type="button">
+              Annuler
+            </button>
+          {/if}
+          <button class="submit-btn" on:click={uploadDocument} disabled={uploadLoading || !selectedFile}>
+            {uploadLoading ? 'Transmission…' : 'Envoyer vers n8n'}
+          </button>
+        </div>
       </div>
 
       <p class="helper-text">
@@ -913,6 +955,16 @@
     gap: 16px;
   }
 
+  .upload-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .upload-actions .submit-btn {
+    flex: 1;
+  }
+
   .file-label {
     border: 1px dashed rgba(255, 255, 255, 0.3);
     border-radius: 12px;
@@ -962,6 +1014,25 @@
     cursor: not-allowed;
   }
 
+  .cancel-btn {
+    padding: 14px 20px;
+    border-radius: 11px;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    background: transparent;
+    color: #e2e8f0;
+    font-weight: 600;
+    font-size: clamp(14px, 1.8vw, 16px);
+    cursor: pointer;
+    transition: opacity 0.3s, transform 0.2s, border-color 0.2s;
+  }
+
+  .cancel-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    border-color: rgba(148, 163, 184, 0.7);
+    color: #fff;
+  }
+
   .message {
     padding: 14px 16px;
     border-radius: 10px;
@@ -985,6 +1056,7 @@
   .chat-history {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     border-radius: 14px;
     background: rgba(6, 11, 25, 0.85);
     border: 1px solid rgba(148, 163, 184, 0.2);
@@ -993,6 +1065,7 @@
     max-height: 380px;
     max-width: 100%;
     overflow-wrap: break-word;
+    word-break: break-word;
   }
 
   .chat-placeholder,
@@ -1007,9 +1080,12 @@
     padding: 12px 14px;
     border-radius: 12px;
     max-width: 100%;
+    min-width: 0;
     overflow-wrap: break-word;
     word-wrap: break-word;
+    word-break: break-word;
     position: relative;
+    box-sizing: border-box;
   }
 
   .message-header {
@@ -1049,11 +1125,19 @@
   .chat-message p {
     margin: 0;
     line-height: 1.4;
+    min-width: 0;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
   }
 
   .chat-text {
     white-space: pre-wrap;
     word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    max-width: 100%;
+    min-width: 0;
   }
 
   .chat-text :global(.chat-link) {
