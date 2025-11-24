@@ -118,84 +118,124 @@
     </div>
 
     <div class="login-form">
-        <h2>
-        <span aria-label="robot-smiley" title="robot" style="font-size:2rem;vertical-align:middle;">🤖</span>
-        </h2>
-
-        {#if message}
-            <div class="message message-{messageType}">
-                {message}
+        <div class="electric-card">
+            <svg class="electric-card__svg" aria-hidden="true">
+                <defs>
+                    <filter id="electric-borders" color-interpolation-filters="sRGB" x="-20%" y="-20%" width="140%" height="140%">
+                        <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise1" seed="1" />
+                        <feOffset in="noise1" dx="0" dy="0" result="offsetNoise1">
+                            <animate attributeName="dy" values="640;0" dur="6s" repeatCount="indefinite" calcMode="linear" />
+                        </feOffset>
+                        <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise2" seed="1" />
+                        <feOffset in="noise2" dx="0" dy="0" result="offsetNoise2">
+                            <animate attributeName="dy" values="0;-640" dur="6s" repeatCount="indefinite" calcMode="linear" />
+                        </feOffset>
+                        <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise3" seed="5" />
+                        <feOffset in="noise3" dx="0" dy="0" result="offsetNoise3">
+                            <animate attributeName="dx" values="560;0" dur="6s" repeatCount="indefinite" calcMode="linear" />
+                        </feOffset>
+                        <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise4" seed="8" />
+                        <feOffset in="noise4" dx="0" dy="0" result="offsetNoise4">
+                            <animate attributeName="dx" values="0;-560" dur="6s" repeatCount="indefinite" calcMode="linear" />
+                        </feOffset>
+                        <feComposite in="offsetNoise1" in2="offsetNoise2" result="verticalFlow" />
+                        <feComposite in="offsetNoise3" in2="offsetNoise4" result="horizontalFlow" />
+                        <feBlend in="verticalFlow" in2="horizontalFlow" mode="screen" result="flowNoise" />
+                        <feDisplacementMap in="SourceGraphic" in2="flowNoise" scale="40" xChannelSelector="R" yChannelSelector="B" />
+                    </filter>
+                </defs>
+            </svg>
+            <div class="electric-card__border">
+                <div class="electric-card__panel"></div>
             </div>
-        {/if}
+            <div class="electric-card__glow electric-card__glow--primary"></div>
+            <div class="electric-card__glow electric-card__glow--secondary"></div>
+            <div class="electric-card__overlay electric-card__overlay--one"></div>
+            <div class="electric-card__overlay electric-card__overlay--two"></div>
+            <div class="electric-card__background"></div>
 
-        <form on:submit|preventDefault={handleLogin}>
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input
-                    type="email"
-                    id="email"
-                    bind:value={email}
-                    placeholder="votre@email.com"
-                    required
-                    disabled={loading}
-                    autocomplete="email"
-                />
-            </div>
+            <div class="electric-card__content">
+                <div class="login-form__badge">Vitalinfo Agent IA</div>
+                <h2>
+                    <span aria-label="robot-smiley" title="robot" style="font-size:2rem;vertical-align:middle;">🤖</span>
+                </h2>
 
-            <div class="form-group">
-                <label for="password">Mot de passe</label>
-                <div class="password-input-wrapper">
-                <input
-                    type="password"
-                    id="password"
-                        bind:this={passwordInput}
-                    bind:value={password}
-                    placeholder="••••••••"
-                    required
-                    disabled={loading}
-                    autocomplete="current-password"
-                />
-                    <button
-                        type="button"
-                        class="password-toggle"
-                        on:click={() => {
-                            showPassword = !showPassword;
-                            if (passwordInput) {
-                                passwordInput.type = showPassword ? "text" : "password";
-                            }
-                        }}
-                        disabled={loading}
-                        aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
-                    >
-                        {#if showPassword}
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                                <line x1="1" y1="1" x2="23" y2="23"></line>
-                            </svg>
-                        {:else}
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                <circle cx="12" cy="12" r="3"></circle>
-                            </svg>
-                        {/if}
+                {#if message}
+                    <div class="message message-{messageType}">
+                        {message}
+                    </div>
+                {/if}
+
+                <form on:submit|preventDefault={handleLogin}>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input
+                            type="email"
+                            id="email"
+                            bind:value={email}
+                            placeholder="votre@email.com"
+                            required
+                            disabled={loading}
+                            autocomplete="email"
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Mot de passe</label>
+                        <div class="password-input-wrapper">
+                            <input
+                                type="password"
+                                id="password"
+                                bind:this={passwordInput}
+                                bind:value={password}
+                                placeholder="••••••••"
+                                required
+                                disabled={loading}
+                                autocomplete="current-password"
+                            />
+                            <button
+                                type="button"
+                                class="password-toggle"
+                                on:click={() => {
+                                    showPassword = !showPassword;
+                                    if (passwordInput) {
+                                        passwordInput.type = showPassword ? "text" : "password";
+                                    }
+                                }}
+                                disabled={loading}
+                                aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                            >
+                                {#if showPassword}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                                    </svg>
+                                {:else}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                {/if}
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" disabled={loading} class="submit-btn">
+                        {loading ? "Connexion..." : "Se connecter"}
                     </button>
-                </div>
-            </div>
+                </form>
 
-            <button type="submit" disabled={loading} class="submit-btn">
-                {loading ? "Connexion..." : "Se connecter"}
-            </button>
-        </form>
-
-        {#if attemptsInfo && attemptsInfo.attempts > 0}
-            <div class="attempts-info">
-                {#if attemptsInfo.blocked}
-                    <span class="attempts-blocked">⚠️ IP bloquée - Réessayez dans {attemptsInfo.remainingMinutes} min</span>
-                {:else}
-                    <span class="attempts-warning">⚠️ {attemptsInfo.remaining} / 5 tentatives restantes</span>
+                {#if attemptsInfo && attemptsInfo.attempts > 0}
+                    <div class="attempts-info">
+                        {#if attemptsInfo.blocked}
+                            <span class="attempts-blocked">⚠️ IP bloquée - Réessayez dans {attemptsInfo.remainingMinutes} min</span>
+                        {:else}
+                            <span class="attempts-warning">⚠️ {attemptsInfo.remaining} / 5 tentatives restantes</span>
+                        {/if}
+                    </div>
                 {/if}
             </div>
-        {/if}
+        </div>
     </div>
 
 </div>
@@ -302,41 +342,200 @@
             font-weight: 600;
         }
     .login-form {
-        position: relative;
-    background: white;
-    padding: 40px;
-    border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-    width: 100%;
-    max-width: 400px;
-    min-width: 300px;
-    height: 45%;
-    margin-top: 50px;
-    }
-    .login-form::after {
-        content: "Vitalinfo Agent IA";
-        position: absolute;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        top: 0;
-        left: 0;
         width: 100%;
-        height: 15%;
-        background: #020024;
-        border-radius: 12px 12px 0 0;
-        font-size: 18px;
+        max-width: 420px;
+        margin-top: 50px;
+        position: relative;
+    }
+
+    @keyframes electricPulse {
+        0% {
+            opacity: 0.75;
+        }
+        50% {
+            opacity: 0.3;
+        }
+        100% {
+            opacity: 0.75;
+        }
+    }
+
+    @keyframes electricSweep {
+        0% {
+            background-position: 0% 50%;
+        }
+        100% {
+            background-position: 200% 50%;
+        }
+    }
+
+    @keyframes cardDrift {
+        0% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-8px);
+        }
+        100% {
+            transform: translateY(0);
+        }
+    }
+
+    .electric-card {
+        --electric-border-color: #5bd3ff;
+        --electric-light-color: color-mix(in srgb, var(--electric-border-color) 60%, #ffffff 40%);
+        --electric-dark: rgba(3, 11, 28, 0.95);
+        padding: 2px;
+        border-radius: 28px;
+        position: relative;
+        background: linear-gradient(
+                -30deg,
+                color-mix(in srgb, var(--electric-border-color) 50%, transparent),
+                transparent,
+                color-mix(in srgb, var(--electric-border-color) 50%, transparent)
+            ),
+            linear-gradient(to bottom, rgba(4, 12, 32, 0.95), rgba(4, 12, 32, 0.95));
+        box-shadow: 0 12px 60px rgba(8, 21, 45, 0.7);
+        isolation: isolate;
+        animation: cardDrift 7s ease-in-out infinite;
+    }
+
+    .electric-card__svg {
+        position: absolute;
+        width: 0;
+        height: 0;
+        visibility: hidden;
+    }
+
+    .electric-card__border {
+        border: 2px solid rgba(91, 211, 255, 0.4);
+        border-radius: 24px;
+        padding-right: 4px;
+        padding-bottom: 4px;
+    }
+
+    .electric-card__panel {
+        width: 100%;
+        min-height: 520px;
+        border-radius: 24px;
+        border: 2px solid var(--electric-border-color);
+        margin-top: -4px;
+        margin-left: -4px;
+        filter: url(#electric-borders);
+    }
+
+    .electric-card__glow {
+        position: absolute;
+        inset: 0;
+        border-radius: 24px;
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    .electric-card__glow--primary {
+        border: 2px solid rgba(91, 211, 255, 0.8);
+        filter: blur(1px);
+        animation: electricPulse 3s ease-in-out infinite;
+    }
+
+    .electric-card__glow--secondary {
+        border: 2px solid rgba(255, 255, 255, 0.35);
+        filter: blur(6px);
+        animation: electricPulse 5s ease-in-out infinite;
+    }
+
+    .electric-card__overlay {
+        position: absolute;
+        inset: 0;
+        border-radius: 24px;
+        mix-blend-mode: screen;
+        opacity: 0.7;
+        pointer-events: none;
+        z-index: 3;
+    }
+
+    .electric-card__overlay--one,
+    .electric-card__overlay--two {
+        background: linear-gradient(
+            -30deg,
+            rgba(255, 255, 255, 0.8),
+            rgba(91, 211, 255, 0.4),
+            transparent 45%,
+            transparent 65%,
+            rgba(255, 255, 255, 0.7)
+        );
+        filter: blur(18px);
+        transform: scale(1.05);
+        background-size: 200% 200%;
+        animation: electricSweep 6s linear infinite;
+    }
+
+    .electric-card__overlay--two {
+        opacity: 0.35;
+    }
+
+    .electric-card__background {
+        position: absolute;
+        inset: 0;
+        border-radius: 24px;
+        transform: scale(1.08);
+        filter: blur(30px);
+        opacity: 0.4;
+        background: linear-gradient(
+            140deg,
+            rgba(91, 211, 255, 0.6),
+            rgba(255, 255, 255, 0.05),
+            rgba(91, 211, 255, 0.4)
+        );
+        z-index: 1;
+    }
+
+    .electric-card__content {
+        position: absolute;
+        inset: 12px;
+        border-radius: 20px;
+        padding: 4rem 3rem 3rem;
+        display: flex;
+        flex-direction: column;
+        background: linear-gradient(
+                120deg,
+                rgba(5, 18, 35, 0.9),
+                rgba(5, 18, 35, 0.75)
+            ),
+            rgba(5, 18, 35, 0.95);
+        color: #f3fbff;
+        text-shadow: 0 0 20px rgba(2, 191, 255, 0.18);
+        border: 1px solid rgba(91, 211, 255, 0.08);
+        backdrop-filter: blur(6px);
+        box-shadow: inset 0 0 35px rgba(0, 140, 255, 0.08);
+        z-index: 5;
+    }
+
+    .login-form__badge {
+        text-align: center;
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.9rem;
         font-weight: 600;
-        color: white;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        color: #e5f6ff;
+        border: 1px solid rgba(91, 211, 255, 0.6);
+        background: linear-gradient(
+            120deg,
+            rgba(91, 211, 255, 0.2),
+            rgba(255, 255, 255, 0.02)
+        );
+        box-shadow: 0 0 30px rgba(91, 211, 255, 0.35);
+        margin-bottom: 1.5rem;
     }
 
     h2 {
         margin: 25px 0 25px 0;
-        color: #598792;
+        color: #9ddcff;
         font-size: clamp(22px, 3vw, 28px);
         text-align: center;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        text-shadow: 0 0 20px rgba(45, 164, 255, 0.45);
     }
 
     .form-group {
@@ -346,7 +545,7 @@
     label {
         display: block;
         margin-bottom: 8px;
-        color: #555;
+        color: #c4d8ff;
         font-weight: 600;
         font-size: clamp(12px, 1.5vw, 14px);
     }
@@ -354,23 +553,26 @@
     input {
         width: 100%;
         padding: 12px;
-        border: 2px solid #070B14;
-        border-radius: 8px;
+        border: 2px solid rgba(85, 159, 255, 0.5);
+        border-radius: 10px;
         font-size: clamp(14px, 1.8vw, 16px);
         font-family: inherit;
-        transition: border-color 0.3s;
+        transition: border-color 0.3s, background 0.3s;
         box-sizing: border-box;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5) inset;
-  
+        background: rgba(7, 19, 40, 0.65);
+        color: #f4fcff;
+        box-shadow: 0 0 15px rgba(0, 198, 255, 0.15) inset;
     }
 
     input::placeholder {
-        color: #5a70a3;
+        color: rgba(179, 207, 255, 0.7);
     }
 
     input:focus {
         outline: none;
-        border-color: #667eea;
+        border-color: rgba(91, 211, 255, 0.9);
+        background: rgba(6, 28, 58, 0.75);
+        box-shadow: 0 0 20px rgba(91, 211, 255, 0.25) inset;
     }
 
     input:disabled {
@@ -426,15 +628,16 @@
     .submit-btn {
         width: 100%;
         padding: 14px;
-        background: #020024;
-        color: white;
+        background: linear-gradient(120deg, #008dff, #5bd3ff);
+        color: #0e1428;
         border: none;
-        border-radius: 8px;
+        border-radius: 10px;
         font-size: clamp(14px, 1.8vw, 16px);
-        font-weight: 600;
+        font-weight: 700;
         cursor: pointer;
         transition: opacity 0.3s, transform 0.2s;
         margin-top: 10px;
+        box-shadow: 0 12px 25px rgba(0, 141, 255, 0.35);
     }
 
     .submit-btn:hover:not(:disabled) {
@@ -457,15 +660,15 @@
     }
 
     .message-success {
-        background-color: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
+        background-color: rgba(0, 179, 138, 0.16);
+        color: #00f5c7;
+        border: 1px solid rgba(0, 245, 199, 0.35);
     }
 
     .message-error {
-        background-color: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
+        background-color: rgba(255, 108, 122, 0.12);
+        color: #ff7b8b;
+        border: 1px solid rgba(255, 123, 139, 0.35);
     }
 
     .attempts-info {
@@ -494,12 +697,9 @@
         }
         
         .login-form {
-            padding: 40px;
             max-width: 100%;
             min-width: auto;
-            margin: 0 10px;
-            height: 23%;
-            margin-bottom: 10px;
+            margin: 0 10px 10px;
         }
         
         h2 {
@@ -534,11 +734,9 @@
 
         }
         .login-form {
-            padding: 10px;
             max-width: 100%;
             min-width: auto;
             margin: 0 10px;
-            height: 23%;
         }
     }
 
