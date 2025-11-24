@@ -13,6 +13,7 @@ import FormLogin from '../../modules/module_login/FormLogin.svelte';
         display:flex;
         align-items: center;
         justify-content: center;
+        flex-direction: column;
         min-height: 100vh;
         width: 100%;
         background: #020024;
