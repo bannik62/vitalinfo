@@ -235,6 +235,7 @@
     text-align: center;
     color: #133751;
     font-size: clamp(30px, 3.5vw, 300px);
+    
 }
 
 
@@ -253,6 +254,8 @@
             line-height: 1.5;
             color: #133751;
             width: 100%;
+            background: #baafe17f;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5) inset;
         }
 
    
@@ -261,7 +264,7 @@
             font-size:clamp(1.2rem, 9vw, 3.1rem); 
             color: #133751;
             font-weight: 700;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
         }
         p {
             font-size:clamp(1.2rem, 9vw, 3.1rem); 
