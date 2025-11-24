@@ -27,7 +27,7 @@
     <section>
       <h2>3. Protection des données personnelles</h2>
       <p>
-        Les données personnelles collectées sur ce site sont utilisées uniquement à but personnel.
+        Les données personnelles collectées sur ce site sont utilisées uniquement personnel et a un but personnel.
       </p>
       <!-- <p>
         Conformément au RGPD, vous disposez d'un droit d'accès, de rectification, 
@@ -51,6 +51,14 @@
       </p>
     </section>
 
+    <section>
+      <h2>6. Statistiques anonymisées</h2>
+      <p>
+        Une mesure de fréquentation anonyme est réalisée via <strong>Umami</strong> afin de comprendre
+        l'utilisation de l'application. Aucune donnée personnelle identifiable n'est collectée.
+      </p>
+    </section>
+
     <section class="last-updated">
       <p>
         <em>Dernière mise à jour : {new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}</em>
@@ -67,7 +75,7 @@
     align-items: flex-start;
     padding: clamp(20px, 5vw, 60px);
     background: #020024;
-    background: radial-gradient(circle, rgba(2, 0, 36, 1) 0%, rgba(9, 9, 121, 1) 20%, rgba(0, 212, 255, 1) 100%);
+    background: radial-gradient(circle, rgba(2, 0, 36, 1) 0%, rgba(9, 9, 121, 1) 20%, #020024 100%);
   }
 
   .mentions-content {
@@ -98,16 +106,35 @@
   }
 
   h1 {
-    color: rgba(9, 9, 121, 1);
+    color: #020024;
     font-size: clamp(28px, 4vw, 36px);
     margin-bottom: clamp(30px, 4vw, 40px);
-    border-bottom: 2px solid rgba(0, 212, 255, 1);
+    border-bottom: 4px solid #2017c7;
+    border-left: 4px solid #2017c7;
     padding-bottom: 15px;
+    padding-left: 10px;
+    text-align: center;
+    box-shadow: 10px 0px 10px rgba(0, 0, 0, 0.254) inset;
+  }
+  strong {
+    color: #7e3def;
+    font-weight: 600;
   }
 
   section {
     margin-bottom: clamp(25px, 3vw, 35px);
+    margin-left: px;
+    border-left: 2px solid #2017c7;
+    border-top: 3px solid #2017c7;
+    padding:10px 10px 10px 10px;
+    box-shadow: 10px 10px 30px rgba(29, 120, 173, 0.372) inset;
   }
+  section:last-child {
+    border-left: none;
+    box-shadow: none;
+  }
+  section:hover {
+scale: 1.05;  }
 
   h2 {
     color: rgba(9, 9, 121, 1);

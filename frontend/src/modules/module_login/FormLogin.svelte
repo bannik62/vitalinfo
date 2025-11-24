@@ -495,7 +495,7 @@
     padding: 4rem 3rem 3rem;
     display: flex;
     flex-direction: column;
-    background: linear-gradient(120deg, #5955656b, #d5cfe875), #D5CFE8;
+    background: linear-gradient(120deg, #595565, #d5cfe875), #D5CFE8;
     color: #f3fbff;
     text-shadow: 0 0 20px rgba(2, 191, 255, 0.18);
     border: 1px solid rgba(91, 211, 255, 0.08);
@@ -733,6 +733,9 @@
     }
 
      @media (max-width: 576px) {
+        .container-login-form-description {
+            padding:8% 0% 0% 0%;
+        }
         .ia-agent-demo {
             margin: 1.5rem 0 1.5rem 0;
             background: linear-gradient(120deg, #837e92, #D5CFE8), #D5CFE8;
