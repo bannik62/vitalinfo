@@ -27,21 +27,19 @@
     <section>
       <h2>3. Protection des données personnelles</h2>
       <p>
-        Les données personnelles collectées sur ce site sont utilisées uniquement 
-        pour permettre l'accès et l'utilisation de l'application. Aucune donnée 
-        n'est partagée avec des tiers.
+        Les données personnelles collectées sur ce site sont utilisées uniquement à but personnel.
       </p>
-      <p>
+      <!-- <p>
         Conformément au RGPD, vous disposez d'un droit d'accès, de rectification, 
         de suppression et d'opposition aux données vous concernant.
-      </p>
+      </p> -->
     </section>
 
     <section>
       <h2>4. Propriété intellectuelle</h2>
       <p>
         L'ensemble du contenu de ce site (textes, images, logos) est la propriété 
-        de l'éditeur ou de ses partenaires et est protégé par le droit d'auteur.
+        de l'éditeur et est protégé par le droit d'auteur.
       </p>
     </section>
 

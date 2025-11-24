@@ -1,5 +1,6 @@
 <script>
   import { onDestroy, afterUpdate } from 'svelte';
+  import { SvelteMap } from 'svelte/reactivity';
   import axios from 'axios';
   import Securecsrf from '../security/module_csrf/Securecsrf.svelte';
   import Navbar from '../module_navbar/Navbar.svelte';
@@ -401,7 +402,7 @@
   }
 
   function refreshCategoryGroups() {
-    const map = new Map();
+    const map = new SvelteMap();
     const others = [];
 
     docs.forEach((doc) => {
@@ -416,7 +417,7 @@
           name: categoryName,
           count: 0,
           lastDate: null,
-          issuers: new Map()
+          issuers: new SvelteMap()
         });
       }
 
@@ -524,19 +525,47 @@
     selectedCategory = null;
   }
 
-  // Fonction pour convertir les URLs en liens cliquables
-  function formatMessageWithLinks(text) {
-    if (!text) return text;
-    
-    // Regex pour détecter les URLs http/https
+  // Fonction pour convertir les URLs en segments sûrs (texte + liens)
+  function buildMessageSegments(text) {
+    if (!text) {
+      return [];
+    }
+
+    const segments = [];
     const urlRegex = /(https?:\/\/[^\s<>"']+)/g;
-    
-    // Remplacer les URLs par des balises <a> en nettoyant les caractères de ponctuation en fin d'URL
-    return text.replace(urlRegex, (url) => {
-      // Nettoyer les caractères de ponctuation en fin d'URL (., ), ,, ;, :, etc.)
-      const cleanedUrl = url.replace(/[.,;:!?)]+$/, '');
-      return `<a href="${cleanedUrl}" target="_blank" rel="noopener noreferrer" class="chat-link">${cleanedUrl}</a>`;
+    const pushSegment = (segment) => {
+      segments.push({ ...segment, key: `${segments.length}-${segment.type}` });
+    };
+
+    let lastIndex = 0;
+
+    text.replace(urlRegex, (match, _, offset) => {
+      if (offset > lastIndex) {
+        pushSegment({ type: 'text', content: text.slice(lastIndex, offset) });
+      }
+
+      const cleanedUrl = match.replace(/[.,;:!?)]+$/, '');
+      const trailing = match.slice(cleanedUrl.length);
+
+      pushSegment({
+        type: 'link',
+        content: cleanedUrl,
+        href: cleanedUrl
+      });
+
+      if (trailing) {
+        pushSegment({ type: 'text', content: trailing });
+      }
+
+      lastIndex = offset + match.length;
+      return match;
     });
+
+    if (lastIndex < text.length) {
+      pushSegment({ type: 'text', content: text.slice(lastIndex) });
+    }
+
+    return segments;
   }
 
   // Fonction pour scroller vers le bas du chat
@@ -644,7 +673,22 @@
                   </button>
                 {/if}
               </div>
-              <p class="chat-text">{@html formatMessageWithLinks(item.text)}</p>
+              <p class="chat-text">
+                {#each buildMessageSegments(item.text) as segment (segment.key)}
+                  {#if segment.type === 'link'}
+                    <a
+                      class="chat-link"
+                      href={segment.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {segment.content}
+                    </a>
+                  {:else}
+                    {segment.content}
+                  {/if}
+                {/each}
+              </p>
             </div>
           {/each}
         {/if}
@@ -699,7 +743,7 @@
     {:else}
       {#if categoryGroups.length > 0}
         <div class="categories-grid">
-          {#each categoryGroups as category}
+          {#each categoryGroups as category (category.name)}
             <div class="category-card">
               <div class="category-header">
                 <h3>{category.name}</h3>
@@ -807,7 +851,7 @@
       </p>
 
       <div class="modal-issuers">
-        {#each selectedCategory.issuers as issuer}
+        {#each selectedCategory.issuers as issuer (issuer.name)}
           <section class="issuer-section">
             <div class="issuer-header">
               <h4>{issuer.name}</h4>
