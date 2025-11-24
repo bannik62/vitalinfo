@@ -1,7 +1,7 @@
 <script>
     import axios from "axios";
     import Securecsrf from "../security/module_csrf/Securecsrf.svelte";
-
+    import Navbar_login from "../module_navbar_login/Navbar_login.svelte";
     let email = "";
     let password = "";
     let loading = false;
@@ -96,6 +96,7 @@
 
 <!-- Composant invisible pour récupérer le token CSRF -->
 <Securecsrf on:csrfTokenReceived={handleCsrfTokenReceived} />
+<Navbar_login />
 <div class=" container-login-form-description">
    
     <div class="container-login-form-description-text">
