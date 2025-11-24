@@ -288,13 +288,12 @@
     }
     .ia-agent-demo {
             margin: 1.5rem 0 1.5rem 0;
-            background: #f6f5f67f;
+            background: linear-gradient(120deg, #837e92, #D5CFE8), #D5CFE8;
             border-radius: 8px;
             padding: 1.2rem 1rem;
             line-height: 1.5;
             color: #133751;
             width: 100%;
-            background: #baafe17f;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.5) inset;
         }
 
@@ -319,7 +318,7 @@
         }
         .ia-demo-ex {
             margin-top: 0.9em;
-            background: #635b653f;
+            background: #ffffff3f;
             padding: 0.6em 0.7em;
             border-radius: 6px;
             border: 3px solid #070B14;
@@ -397,7 +396,6 @@
             linear-gradient(to bottom, rgba(4, 12, 32, 0.95), rgba(4, 12, 32, 0.95));
         box-shadow: 0 12px 60px rgba(8, 21, 45, 0.7);
         isolation: isolate;
-        animation: cardDrift 7s ease-in-out infinite;
     }
 
     .electric-card__svg {
@@ -492,23 +490,18 @@
 
     .electric-card__content {
         position: absolute;
-        inset: 12px;
-        border-radius: 20px;
-        padding: 4rem 3rem 3rem;
-        display: flex;
-        flex-direction: column;
-        background: linear-gradient(
-                120deg,
-                rgba(5, 18, 35, 0.9),
-                rgba(5, 18, 35, 0.75)
-            ),
-            rgba(5, 18, 35, 0.95);
-        color: #f3fbff;
-        text-shadow: 0 0 20px rgba(2, 191, 255, 0.18);
-        border: 1px solid rgba(91, 211, 255, 0.08);
-        backdrop-filter: blur(6px);
-        box-shadow: inset 0 0 35px rgba(0, 140, 255, 0.08);
-        z-index: 5;
+    inset: 12px;
+    border-radius: 20px;
+    padding: 4rem 3rem 3rem;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(120deg, #5955656b, #d5cfe875), #D5CFE8;
+    color: #f3fbff;
+    text-shadow: 0 0 20px rgba(2, 191, 255, 0.18);
+    border: 1px solid rgba(91, 211, 255, 0.08);
+    backdrop-filter: blur(6px);
+    box-shadow: inset 0 0 35px rgba(0, 140, 255, 0.08);
+    z-index: 5;
     }
 
     .login-form__badge {
@@ -701,6 +694,27 @@
             min-width: auto;
             margin: 0 10px 10px;
         }
+
+        .electric-card {
+            animation: none;
+        }
+
+        .electric-card__panel {
+            filter: none;
+            border: 2px solid rgba(91, 211, 255, 0.6);
+            box-shadow: inset 0 0 10px rgba(91, 211, 255, 0.18);
+        }
+
+        .electric-card__glow,
+        .electric-card__overlay,
+        .electric-card__background {
+            animation: none;
+        }
+
+        .electric-card__overlay--one,
+        .electric-card__overlay--two {
+            background-position: 50% 50%;
+        }
         
         h2 {
             font-size: 22px;
@@ -718,10 +732,19 @@
         }
     }
 
-    /* Tablet (576px - 768px) */
-    @media (min-width: 576px) and (max-width: 767.98px) {
-        
+     @media (max-width: 576px) {
+        .ia-agent-demo {
+            margin: 1.5rem 0 1.5rem 0;
+            background: linear-gradient(120deg, #837e92, #D5CFE8), #D5CFE8;
+            border-radius: 0px 0px 8px 8px;
+            padding: 1.2rem 1rem;
+            line-height: 1.5;
+            color: #133751;
+            width: 100%;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5) inset;
+        }
     }
+  
 
     /* Desktop (768px - 1024px) */
     @media (min-width: 768px) and (max-width: 1023.98px) {
