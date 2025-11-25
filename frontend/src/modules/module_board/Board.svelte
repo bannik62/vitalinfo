@@ -931,6 +931,29 @@
         {/if}
       </div>
 
+      <div class="chat-audio-controls">
+        <label class="audio-toggle">
+          <input
+            type="checkbox"
+            bind:checked={ttsEnabled}
+            disabled={!ttsSupported}
+          />
+          <span>
+            {ttsSupported
+              ? 'Lecture vocale automatique'
+              : 'Lecture vocale indisponible sur ce navigateur'}
+          </span>
+        </label>
+        <button
+          type="button"
+          class="stop-speech-btn"
+          on:click={stopSpeaking}
+          disabled={!speaking}
+        >
+          Couper la voix
+        </button>
+      </div>
+
       <div class="chat-input">
         <div class="chat-input-wrapper">
           <textarea
@@ -1590,6 +1613,37 @@
     background: rgba(99, 102, 241, 0.18);
     border: 1px solid rgba(99, 102, 241, 0.3);
     color: #e0e7ff;
+  }
+
+  .chat-audio-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+    margin-bottom: 12px;
+  }
+
+  .audio-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: clamp(12px, 1.5vw, 14px);
+    color: #e2e8f0;
+  }
+
+  .audio-toggle input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #3b82f6;
+  }
+
+  .audio-toggle:has(input:disabled) {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
   .chat-input {
