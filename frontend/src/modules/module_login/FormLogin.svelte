@@ -156,9 +156,9 @@
 
             <div class="electric-card__content">
                 <div class="login-form__badge">Vitalinfo Agent IA</div>
-                <h2>
-                    <span aria-label="robot-smiley" title="robot" style="font-size:2rem;vertical-align:middle;">🤖</span>
-                </h2>
+                <div class="robot-login" role="img" aria-label="robot_login" title="robot_login">
+                    <img src="/robot_login.png" alt="robot" title="robot_login" />
+                </div>
 
                 {#if message}
                     <div class="message message-{messageType}">
@@ -328,6 +328,24 @@
         .ia-demo-ex span {
             font-weight: 600;
             color: #008c99;
+            width: 2rem;
+            height: 2rem;
+        }
+        .robot-login {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            /* margin: 0 auto 1rem auto; */
+        }
+        .robot-login img {
+            width: 7rem;
+            height: 7rem;
+            display: block;
+            filter: 
+                drop-shadow(0px -5px 8px rgba(141, 230, 238, 0.861))
+                drop-shadow(10px 10px 12px rgba(19, 55, 81, 0.3))
+                drop-shadow(12px 12px 15px rgba(0, 0, 0, 0.2));
         }
         .ia-question {
             margin-top: 0.25em;
@@ -645,6 +663,10 @@
     }
 
     .message {
+        position: absolute;
+        top: -8%;
+        left: 50%;
+        transform: translate(-50%, -50%);
         padding: 12px 16px;
         border-radius: 8px;
         margin-bottom: 20px;
@@ -659,7 +681,7 @@
     }
 
     .message-error {
-        background-color: rgba(255, 108, 122, 0.12);
+        background-color: rgba(255, 108, 123, 0.344);
         color: #ff7b8b;
         border: 1px solid rgba(255, 123, 139, 0.35);
     }
