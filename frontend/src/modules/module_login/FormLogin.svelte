@@ -11,6 +11,9 @@
     let showPassword = false;
     let passwordInput;
     let attemptsInfo = null;
+    
+    // Variable réactive pour détecter si l'utilisateur écrit dans les inputs
+    $: isTyping = email.length > 0 || password.length > 0;
 
     function handleCsrfTokenReceived(event) {
         csrfToken = event.detail;
@@ -157,7 +160,12 @@
             <div class="electric-card__content">
                 <div class="login-form__badge">Vitalinfo Agent IA</div>
                 <div class="robot-login" role="img" aria-label="robot_login" title="robot_login">
-                    <img src="/robot_login.png" alt="robot" title="robot_login" />
+                    <img 
+                        src="/robot_login.png" 
+                        alt="robot" 
+                        title="robot_login"
+                        class:bright={isTyping}
+                    />
                 </div>
 
                 {#if message}
@@ -345,7 +353,16 @@
             filter: 
                 drop-shadow(0px -5px 8px rgba(141, 230, 238, 0.861))
                 drop-shadow(10px 10px 12px rgba(19, 55, 81, 0.3))
-                drop-shadow(12px 12px 15px rgba(0, 0, 0, 0.2));
+                drop-shadow(12px 12px 15px rgba(0, 0, 0, 0.2))
+                brightness(1.1);
+            transition: filter 0.3s ease;
+        }
+        .robot-login img.bright {
+            filter: 
+                drop-shadow(0px -5px 8px rgba(141, 230, 238, 0.861))
+                drop-shadow(10px 10px 12px rgba(19, 55, 81, 0.3))
+                drop-shadow(12px 12px 15px rgba(0, 0, 0, 0.2))
+                brightness(2);
         }
         .ia-question {
             margin-top: 0.25em;
@@ -541,13 +558,7 @@
         margin-bottom: 1.5rem;
     }
 
-    h2 {
-        margin: 25px 0 25px 0;
-        color: #9ddcff;
-        font-size: clamp(22px, 3vw, 28px);
-        text-align: center;
-        text-shadow: 0 0 20px rgba(45, 164, 255, 0.45);
-    }
+
 
     .form-group {
         margin-bottom: 20px;
