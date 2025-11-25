@@ -21,6 +21,11 @@
   let chatMessage = '';
   let chatHistory = [];
   let chatHistoryContainer;
+  
+  // Speech-to-text
+  let isListening = false;
+  let recognition = null;
+  let speechSupported = false;
 
   // Documents
   let docs = [];
@@ -229,6 +234,99 @@
     } finally {
       chatLoading = false;
     }
+  }
+
+  // Initialisation de la reconnaissance vocale
+  function initSpeechRecognition() {
+    if (typeof window !== 'undefined') {
+      try {
+        // Vérification de la disponibilité de l'API de reconnaissance vocale
+        let SpeechRecognitionConstructor = null;
+        if ('SpeechRecognition' in window) {
+          SpeechRecognitionConstructor = window.SpeechRecognition;
+        } else if ('webkitSpeechRecognition' in window) {
+          SpeechRecognitionConstructor = window['webkitSpeechRecognition'];
+        }
+        
+        if (SpeechRecognitionConstructor) {
+          // Utiliser une fonction pour contourner l'erreur TypeScript
+          // @ts-expect-error - SpeechRecognition n'est pas dans les types TypeScript standard
+          recognition = new SpeechRecognitionConstructor();
+          speechSupported = true;
+        }
+        
+        if (recognition) {
+        recognition.lang = 'fr-FR';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onstart = () => {
+          isListening = true;
+        };
+
+        recognition.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          chatInput = transcript.trim();
+          // Envoi automatique après transcription
+          setTimeout(() => {
+            sendChatMessage();
+          }, 100);
+        };
+
+        recognition.onerror = (event) => {
+          console.error('Erreur de reconnaissance vocale:', event.error);
+          isListening = false;
+          if (event.error === 'no-speech') {
+            chatMessage = 'Aucune parole détectée. Réessayez.';
+          } else if (event.error === 'not-allowed') {
+            chatMessage = 'Permission microphone refusée.';
+          }
+        };
+
+        recognition.onend = () => {
+          isListening = false;
+        };
+        }
+      } catch (error) {
+        console.error('Erreur lors de l\'initialisation de la reconnaissance vocale:', error);
+        speechSupported = false;
+      }
+    }
+  }
+
+  function startListening() {
+    if (!speechSupported) {
+      initSpeechRecognition();
+    }
+    
+    if (!recognition) {
+      chatMessage = 'Reconnaissance vocale non supportée sur ce navigateur.';
+      return;
+    }
+
+    if (isListening) {
+      stopListening();
+      return;
+    }
+
+    try {
+      recognition.start();
+    } catch (error) {
+      console.error('Erreur au démarrage:', error);
+      isListening = false;
+    }
+  }
+
+  function stopListening() {
+    if (recognition && isListening) {
+      recognition.stop();
+      isListening = false;
+    }
+  }
+
+  // Initialiser au chargement
+  if (typeof window !== 'undefined') {
+    initSpeechRecognition();
   }
 
   async function deleteConversation(conversationId) {
@@ -599,6 +697,7 @@
   onDestroy(() => {
     stopPollingForNewDoc();
     stopErrorPolling();
+    stopListening();
   });
 </script>
 
@@ -695,19 +794,34 @@
       </div>
 
       <div class="chat-input">
-        <textarea
-          rows="2"
-          bind:value={chatInput}
-          placeholder="Posez votre question…"
-          disabled={chatLoading}
-          on:keydown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              sendChatMessage();
-            }
-          }}
-        ></textarea>
-        <button class="submit-btn" on:click={sendChatMessage} disabled={chatLoading}>
+        <div class="chat-input-wrapper">
+          <textarea
+            rows="2"
+            bind:value={chatInput}
+            placeholder="Posez votre question…"
+            disabled={chatLoading || isListening}
+            on:keydown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendChatMessage();
+              }
+            }}
+          ></textarea>
+          <button 
+            class="micro-btn {isListening ? 'listening' : ''}" 
+            on:click={startListening}
+            disabled={chatLoading}
+            title={isListening ? 'Arrêter l\'écoute' : 'Parler'}
+            type="button"
+          >
+            {#if isListening}
+              <span class="micro-icon pulse">🎤</span>
+            {:else}
+              <span class="micro-icon">🎤</span>
+            {/if}
+          </button>
+        </div>
+        <button class="submit-btn" on:click={sendChatMessage} disabled={chatLoading || isListening}>
           {chatLoading ? 'Envoi…' : 'Envoyer'}
         </button>
       </div>
@@ -1234,8 +1348,14 @@
     gap: 12px;
   }
 
+  .chat-input-wrapper {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
   .chat-input textarea {
-    width: 100%;
+    flex: 1;
     padding: 12px;
     border-radius: 10px;
     border: 1px solid rgba(148, 163, 184, 0.3);
@@ -1248,6 +1368,65 @@
   .chat-input textarea:focus {
     outline: none;
     border-color: rgba(59, 130, 246, 0.8);
+  }
+
+  .micro-btn {
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    border-radius: 10px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    height: 48px;
+  }
+
+  .micro-btn:hover:not(:disabled) {
+    background: rgba(59, 130, 246, 0.3);
+    border-color: rgba(59, 130, 246, 0.6);
+    transform: scale(1.05);
+  }
+
+  .micro-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .micro-btn.listening {
+    background: rgba(239, 68, 68, 0.3);
+    border-color: rgba(239, 68, 68, 0.6);
+    animation: pulse-glow 1.5s ease-in-out infinite;
+  }
+
+  .micro-icon {
+    font-size: clamp(18px, 2vw, 22px);
+    line-height: 1;
+    display: block;
+  }
+
+  .micro-icon.pulse {
+    animation: pulse-scale 1s ease-in-out infinite;
+  }
+
+  @keyframes pulse-scale {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.2);
+    }
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    }
+    50% {
+      box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+    }
   }
 
   .docs-header {
