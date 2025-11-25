@@ -32,7 +32,17 @@
   let ttsEnabled = false;
   let speaking = false;
   let currentUtterance = null;
-  let selectedVoice = null;
+  let settingsModalOpen = false;
+  let autoSendSpeech = true;
+  let sttLanguage = 'fr-FR';
+  let availableVoices = [];
+  let selectedVoiceName = '';
+  let speechRate = 1;
+  let speechPitch = 1;
+  const speechLanguages = [
+    { value: 'fr-FR', label: 'Français' },
+    { value: 'en-US', label: 'Anglais (US)' }
+  ];
 
   // Documents
   let docs = [];
@@ -264,9 +274,9 @@
         }
         
         if (recognition) {
-        recognition.lang = 'fr-FR';
-        recognition.continuous = false;
-        recognition.interimResults = false;
+          recognition.lang = sttLanguage || 'fr-FR';
+          recognition.continuous = false;
+          recognition.interimResults = false;
 
         recognition.onstart = () => {
           isListening = true;
@@ -275,10 +285,11 @@
         recognition.onresult = (event) => {
           const transcript = event.results[0][0].transcript;
           chatInput = transcript.trim();
-          // Envoi automatique après transcription
-          setTimeout(() => {
-            sendChatMessage();
-          }, 100);
+          if (autoSendSpeech) {
+            setTimeout(() => {
+              sendChatMessage();
+            }, 100);
+          }
         };
 
         recognition.onerror = (event) => {
@@ -354,11 +365,15 @@
       if (!voices || voices.length === 0) {
         return;
       }
-      // Choisir prioritairement une voix française
-      selectedVoice =
+      availableVoices = voices;
+      if (selectedVoiceName && voices.some((voice) => voice.name === selectedVoiceName)) {
+        return;
+      }
+      const preferredVoice =
         voices.find((voice) => voice.lang?.toLowerCase().startsWith('fr')) ||
         voices.find((voice) => voice.lang?.toLowerCase().startsWith('en')) ||
         voices[0];
+      selectedVoiceName = preferredVoice?.name || '';
     };
 
     loadVoices();
@@ -378,12 +393,18 @@
     stopSpeaking();
 
     currentUtterance = new SpeechSynthesisUtterance(text);
-    if (selectedVoice) {
-      currentUtterance.voice = selectedVoice;
+    const voice =
+      availableVoices.find((item) => item.name === selectedVoiceName) ||
+      availableVoices[0] ||
+      null;
+    if (voice) {
+      currentUtterance.voice = voice;
+      currentUtterance.lang = voice.lang;
+    } else {
+      currentUtterance.lang = sttLanguage || 'fr-FR';
     }
-    currentUtterance.lang = selectedVoice?.lang || 'fr-FR';
-    currentUtterance.rate = 1;
-    currentUtterance.pitch = 1;
+    currentUtterance.rate = speechRate;
+    currentUtterance.pitch = speechPitch;
 
     currentUtterance.onstart = () => {
       speaking = true;
@@ -419,6 +440,14 @@
 
   $: if (!ttsEnabled) {
     stopSpeaking();
+  }
+  
+  $: if (recognition) {
+    recognition.lang = sttLanguage || 'fr-FR';
+  }
+  
+  function closeSettingsModal() {
+    settingsModalOpen = false;
   }
 
   // Initialiser au chargement
@@ -843,7 +872,17 @@
     </section>
 
     <section class="board-card chat-card">
-      <h2>Chat avec l’agent IA</h2>
+      <div class="chat-header">
+        <h2>Chat avec l’agent IA</h2>
+        <button
+          type="button"
+          class="settings-btn"
+          on:click={() => (settingsModalOpen = true)}
+          aria-label="Paramètres de la voix"
+        >
+          ⚙️
+        </button>
+      </div>
       <div bind:this={chatHistoryContainer} class="chat-history" on:scroll={handleChatScroll}>
         {#if chatHistory.length === 0}
           <div class="chat-placeholder">
@@ -890,29 +929,6 @@
             </div>
           {/each}
         {/if}
-      </div>
-
-      <div class="chat-audio-controls">
-        <label class="audio-toggle">
-          <input
-            type="checkbox"
-            bind:checked={ttsEnabled}
-            disabled={!ttsSupported}
-          />
-          <span>
-            {ttsSupported
-              ? 'Lecture vocale automatique'
-              : 'Lecture vocale indisponible sur ce navigateur'}
-          </span>
-        </label>
-        <button
-          type="button"
-          class="stop-speech-btn"
-          on:click={stopSpeaking}
-          disabled={!speaking}
-        >
-          Couper la voix
-        </button>
       </div>
 
       <div class="chat-input">
@@ -1077,6 +1093,118 @@
   </section>
 </div>
 
+{#if settingsModalOpen}
+  <div class="settings-modal-backdrop" on:click={closeSettingsModal}>
+    <div class="settings-modal" on:click|stopPropagation>
+      <div class="settings-modal-header">
+        <h3>Paramètres audio</h3>
+        <button type="button" class="close-btn" on:click={closeSettingsModal} aria-label="Fermer les paramètres">
+          ✕
+        </button>
+      </div>
+
+      <div class="settings-sections">
+        <section>
+          <h4>Dictée (Speech-to-Text)</h4>
+          <p class="status-line">
+            {speechSupported
+              ? 'Micro disponible. Cliquez sur le micro pour dicter votre message.'
+              : 'La dictée vocale n’est pas supportée sur ce navigateur.'}
+          </p>
+
+          <label class="settings-field">
+            <span>Langue de reconnaissance</span>
+            <select bind:value={sttLanguage} disabled={!speechSupported}>
+              {#each speechLanguages as lang}
+                <option value={lang.value}>{lang.label}</option>
+              {/each}
+            </select>
+          </label>
+
+          <label class="settings-toggle">
+            <input type="checkbox" bind:checked={autoSendSpeech} />
+            <span>Envoyer automatiquement après la transcription</span>
+          </label>
+        </section>
+
+        <section>
+          <h4>Lecture vocale (Text-to-Speech)</h4>
+          <p class="status-line">
+            {ttsSupported
+              ? 'L’agent peut lire les réponses à voix haute.'
+              : 'Lecture vocale indisponible sur ce navigateur.'}
+          </p>
+
+          <label class="settings-toggle">
+            <input type="checkbox" bind:checked={ttsEnabled} disabled={!ttsSupported} />
+            <span>Activer la lecture vocale</span>
+          </label>
+
+          <div class="settings-subgrid" aria-disabled={!ttsEnabled}>
+            <label class="settings-field">
+              <span>Voix</span>
+              <select
+                bind:value={selectedVoiceName}
+                disabled={!ttsEnabled || !ttsSupported || availableVoices.length === 0}
+              >
+                {#if availableVoices.length === 0}
+                  <option value="">Chargement des voix…</option>
+                {:else}
+                  {#each availableVoices as voice}
+                    <option value={voice.name}>
+                      {voice.name} ({voice.lang})
+                    </option>
+                  {/each}
+                {/if}
+              </select>
+            </label>
+
+            <label class="settings-field">
+              <span>Vitesse</span>
+              <div class="slider-row">
+                <input
+                  type="range"
+                  min="0.8"
+                  max="1.3"
+                  step="0.05"
+                  value={speechRate}
+                  on:input={(event) => (speechRate = parseFloat(event.currentTarget.value))}
+                  disabled={!ttsEnabled}
+                />
+                <span>{speechRate.toFixed(2)}x</span>
+              </div>
+            </label>
+
+            <label class="settings-field">
+              <span>Hauteur</span>
+              <div class="slider-row">
+                <input
+                  type="range"
+                  min="0.8"
+                  max="1.2"
+                  step="0.05"
+                  value={speechPitch}
+                  on:input={(event) => (speechPitch = parseFloat(event.currentTarget.value))}
+                  disabled={!ttsEnabled}
+                />
+                <span>{speechPitch.toFixed(2)}x</span>
+              </div>
+            </label>
+
+            <button
+              type="button"
+              class="stop-speech-btn"
+              on:click={stopSpeaking}
+              disabled={!speaking}
+            >
+              Couper la voix
+            </button>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+{/if}
 {#if categoryModalOpen && selectedCategory}
   <div class="modal-backdrop" on:click={closeCategoryModal}>
     <div class="modal-panel" on:click|stopPropagation>
@@ -1470,51 +1598,29 @@
     gap: 12px;
   }
   
-  .chat-audio-controls {
+  .chat-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    margin-top: 16px;
-    padding: 10px 12px;
-    border-radius: 10px;
-    background: rgba(59, 130, 246, 0.08);
-    border: 1px solid rgba(59, 130, 246, 0.2);
+    margin-bottom: 12px;
   }
 
-  .audio-toggle {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: clamp(11px, 1.4vw, 13px);
-    color: #e2e8f0;
-  }
-
-  .audio-toggle input {
-    width: 18px;
-    height: 18px;
-    accent-color: #3b82f6;
-  }
-
-  .stop-speech-btn {
-    background: rgba(239, 68, 68, 0.18);
-    border: 1px solid rgba(239, 68, 68, 0.4);
-    color: #fecaca;
-    border-radius: 8px;
-    padding: 8px 14px;
+  .settings-btn {
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    color: #bfdbfe;
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    font-size: 18px;
     cursor: pointer;
-    font-size: clamp(10px, 1.3vw, 12px);
     transition: background 0.2s, transform 0.2s;
   }
 
-  .stop-speech-btn:hover:not(:disabled) {
-    background: rgba(239, 68, 68, 0.3);
-    transform: scale(1.02);
-  }
-
-  .stop-speech-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
+  .settings-btn:hover {
+    background: rgba(59, 130, 246, 0.3);
+    transform: rotate(12deg);
   }
 
   .chat-input-wrapper {
@@ -1596,6 +1702,153 @@
     50% {
       box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
     }
+  }
+
+  .settings-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 16px;
+  }
+
+  .settings-modal {
+    width: min(640px, 100%);
+    background: #070b14;
+    border-radius: 18px;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    padding: 24px;
+    color: #e2e8f0;
+  }
+
+  .settings-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .settings-modal h3 {
+    margin: 0;
+  }
+
+  .close-btn {
+    background: transparent;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    color: #f8fafc;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  .close-btn:hover {
+    background: rgba(248, 250, 252, 0.1);
+  }
+
+  .settings-sections {
+    display: grid;
+    gap: 24px;
+  }
+
+  .settings-sections section {
+    background: rgba(15, 23, 42, 0.7);
+    border-radius: 14px;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    padding: 16px;
+  }
+
+  .settings-sections h4 {
+    margin: 0 0 10px;
+    color: #93c5fd;
+  }
+
+  .status-line {
+    margin: 0 0 10px;
+    font-size: 0.9rem;
+    color: rgba(226, 232, 240, 0.8);
+  }
+
+  .settings-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+    font-size: 0.95rem;
+  }
+
+  .settings-field select {
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    color: #e2e8f0;
+    border-radius: 8px;
+    padding: 8px;
+  }
+
+  .settings-field select:disabled {
+    opacity: 0.5;
+  }
+
+  .settings-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    margin-bottom: 12px;
+  }
+
+  .settings-toggle input {
+    width: 18px;
+    height: 18px;
+    accent-color: #3b82f6;
+  }
+
+  .settings-subgrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+  }
+
+  .settings-subgrid[aria-disabled="true"] {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .slider-row input {
+    flex: 1;
+  }
+
+  .stop-speech-btn {
+    align-self: flex-end;
+    background: rgba(239, 68, 68, 0.18);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #fecaca;
+    border-radius: 8px;
+    padding: 8px 14px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.2s, transform 0.2s;
+  }
+
+  .stop-speech-btn:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.3);
+    transform: scale(1.02);
+  }
+
+  .stop-speech-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 
   .docs-header {
