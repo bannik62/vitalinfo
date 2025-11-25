@@ -492,7 +492,7 @@
         position: absolute;
     inset: 12px;
     border-radius: 20px;
-    padding: 4rem 3rem 3rem;
+    padding: 2rem 3rem 3rem;
     display: flex;
     flex-direction: column;
     background: linear-gradient(120deg, #595565, #d5cfe875), #D5CFE8;

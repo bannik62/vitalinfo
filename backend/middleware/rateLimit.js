@@ -18,8 +18,14 @@ async function cleanExpiredAttempts() {
     const now = new Date();
     const windowStart = new Date(now.getTime() - WINDOW_MS);
 
-    // Supprimer les entrées non bloquées dont la fenêtre est expirée
-    await BlockedIp.destroy({
+    // Réinitialiser les entrées non bloquées dont la fenêtre est expirée
+    await BlockedIp.update({
+      attempts: 0,
+      firstAttempt: now,
+      lastAttempt: now,
+      blocked: false,
+      blockedUntil: null
+    }, {
       where: {
         blocked: false,
         firstAttempt: {
@@ -28,8 +34,14 @@ async function cleanExpiredAttempts() {
       }
     });
 
-    // Supprimer les entrées bloquées dont le blocage est expiré
-    await BlockedIp.destroy({
+    // Débloquer les entrées dont le blocage est expiré
+    await BlockedIp.update({
+      attempts: 0,
+      blocked: false,
+      blockedUntil: null,
+      firstAttempt: now,
+      lastAttempt: now
+    }, {
       where: {
         blocked: true,
         blockedUntil: {
@@ -120,20 +132,21 @@ export const loginRateLimit = async (req, res, next) => {
           retryAfter: Math.ceil((new Date(blockedIp.blockedUntil) - now) / 1000)
         });
       } else {
-        // Débloquer si la période est expirée
-        await BlockedIp.destroy({ where: { ip: clientIP } });
-        blockedIp = null;
+        // Débloquer si la période est expirée mais conserver l'historique
+        await BlockedIp.update({
+          blocked: false,
+          blockedUntil: null,
+          attempts: 0,
+          firstAttempt: now,
+          lastAttempt: now
+        }, { where: { ip: clientIP } });
+        blockedIp = await BlockedIp.findOne({ where: { ip: clientIP } });
       }
     }
 
-    // Si c'est la première tentative ou si la fenêtre est expirée
-    if (!blockedIp || (now - new Date(blockedIp.firstAttempt) > WINDOW_MS && !blockedIp.blocked)) {
-      // Créer ou réinitialiser l'entrée
-      if (blockedIp) {
-        await BlockedIp.destroy({ where: { ip: clientIP } });
-      }
-      
-      const newBlockedIp = await BlockedIp.create({
+    // Créer l'entrée si elle n'existe pas encore
+    if (!blockedIp) {
+      blockedIp = await BlockedIp.create({
         ip: clientIP,
         attempts: 0,
         firstAttempt: now,
@@ -141,16 +154,16 @@ export const loginRateLimit = async (req, res, next) => {
         blocked: false,
         blockedUntil: null
       });
-
-      req.loginAttemptsData = {
-        count: newBlockedIp.attempts,
-        firstAttempt: newBlockedIp.firstAttempt,
-        lastAttempt: newBlockedIp.lastAttempt,
-        blocked: newBlockedIp.blocked,
-        blockedUntil: newBlockedIp.blockedUntil
-      };
-      req.clientIP = clientIP;
-      return next();
+    } else if (now - new Date(blockedIp.firstAttempt) > WINDOW_MS && !blockedIp.blocked) {
+      // Réinitialiser si la fenêtre est expirée
+      await BlockedIp.update({
+        attempts: 0,
+        firstAttempt: now,
+        lastAttempt: now,
+        blocked: false,
+        blockedUntil: null
+      }, { where: { ip: clientIP } });
+      blockedIp = await BlockedIp.findOne({ where: { ip: clientIP } });
     }
 
     // Vérifier si on a atteint le maximum (avant d'incrémenter)
@@ -201,7 +214,25 @@ export const loginRateLimit = async (req, res, next) => {
 export const resetLoginAttempts = async (req) => {
   try {
     const clientIP = req.clientIP || getClientIP(req);
-    await BlockedIp.destroy({ where: { ip: clientIP } });
+    const now = new Date();
+    const [updatedCount] = await BlockedIp.update({
+      attempts: 0,
+      blocked: false,
+      blockedUntil: null,
+      firstAttempt: now,
+      lastAttempt: now
+    }, { where: { ip: clientIP } });
+
+    if (updatedCount === 0) {
+      await BlockedIp.create({
+        ip: clientIP,
+        attempts: 0,
+        firstAttempt: now,
+        lastAttempt: now,
+        blocked: false,
+        blockedUntil: null
+      });
+    }
   } catch (error) {
     console.error('Erreur lors de la réinitialisation des tentatives:', error);
   }
@@ -295,6 +326,14 @@ export const getLoginAttemptsInfo = async (req) => {
 
     // Si la fenêtre est expirée
     if (now - new Date(blockedIp.firstAttempt) > WINDOW_MS && !blockedIp.blocked) {
+      await BlockedIp.update({
+        attempts: 0,
+        firstAttempt: now,
+        lastAttempt: now,
+        blocked: false,
+        blockedUntil: null
+      }, { where: { ip: clientIP } });
+
       return {
         attempts: 0,
         remaining: MAX_ATTEMPTS,
@@ -315,7 +354,13 @@ export const getLoginAttemptsInfo = async (req) => {
         };
       } else {
         // Débloquer
-        await BlockedIp.destroy({ where: { ip: clientIP } });
+        await BlockedIp.update({
+          attempts: 0,
+          blocked: false,
+          blockedUntil: null,
+          firstAttempt: now,
+          lastAttempt: now
+        }, { where: { ip: clientIP } });
         return {
           attempts: 0,
           remaining: MAX_ATTEMPTS,
@@ -342,3 +387,4 @@ export const getLoginAttemptsInfo = async (req) => {
     };
   }
 };
+
