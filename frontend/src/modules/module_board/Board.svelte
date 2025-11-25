@@ -26,6 +26,13 @@
   let isListening = false;
   let recognition = null;
   let speechSupported = false;
+  
+  // Speech-to-text inverse (text-to-speech)
+  let ttsSupported = false;
+  let ttsEnabled = false;
+  let speaking = false;
+  let currentUtterance = null;
+  let selectedVoice = null;
 
   // Documents
   let docs = [];
@@ -222,6 +229,7 @@
       };
       chatHistory = [...chatHistory, agentReply];
       scrollToBottom();
+      speakText(agentReply.text);
       
       // Ne pas recharger l'historique ici - les messages sont déjà affichés
       // L'historique sera rechargé au prochain démarrage de la page
@@ -279,7 +287,13 @@
           if (event.error === 'no-speech') {
             chatMessage = 'Aucune parole détectée. Réessayez.';
           } else if (event.error === 'not-allowed') {
-            chatMessage = 'Permission microphone refusée.';
+            chatMessage = 'Permission microphone refusée. Vérifiez les paramètres du navigateur.';
+          } else if (event.error === 'network') {
+            chatMessage = 'Erreur réseau : impossible de se connecter au service de transcription. Vérifiez votre connexion internet.';
+          } else if (event.error === 'aborted') {
+            chatMessage = 'Reconnaissance vocale interrompue.';
+          } else {
+            chatMessage = `Erreur de reconnaissance vocale : ${event.error}. Réessayez.`;
           }
         };
 
@@ -324,9 +338,93 @@
     }
   }
 
+  function initSpeechSynthesis() {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const synth = window.speechSynthesis;
+    if (!synth) {
+      return;
+    }
+
+    ttsSupported = true;
+
+    const loadVoices = () => {
+      const voices = synth.getVoices();
+      if (!voices || voices.length === 0) {
+        return;
+      }
+      // Choisir prioritairement une voix française
+      selectedVoice =
+        voices.find((voice) => voice.lang?.toLowerCase().startsWith('fr')) ||
+        voices.find((voice) => voice.lang?.toLowerCase().startsWith('en')) ||
+        voices[0];
+    };
+
+    loadVoices();
+    synth.onvoiceschanged = loadVoices;
+  }
+
+  function speakText(text) {
+    if (!ttsEnabled || !ttsSupported || typeof window === 'undefined') {
+      return;
+    }
+
+    const synth = window.speechSynthesis;
+    if (!synth || !text?.trim()) {
+      return;
+    }
+
+    stopSpeaking();
+
+    currentUtterance = new SpeechSynthesisUtterance(text);
+    if (selectedVoice) {
+      currentUtterance.voice = selectedVoice;
+    }
+    currentUtterance.lang = selectedVoice?.lang || 'fr-FR';
+    currentUtterance.rate = 1;
+    currentUtterance.pitch = 1;
+
+    currentUtterance.onstart = () => {
+      speaking = true;
+    };
+
+    currentUtterance.onend = () => {
+      speaking = false;
+      currentUtterance = null;
+    };
+
+    currentUtterance.onerror = () => {
+      speaking = false;
+      currentUtterance = null;
+      chatMessage = 'Erreur lors de la lecture audio.';
+    };
+
+    synth.speak(currentUtterance);
+  }
+
+  function stopSpeaking() {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const synth = window.speechSynthesis;
+    if (synth && (synth.speaking || synth.pending)) {
+      synth.cancel();
+    }
+
+    speaking = false;
+    currentUtterance = null;
+  }
+
+  $: if (!ttsEnabled) {
+    stopSpeaking();
+  }
+
   // Initialiser au chargement
   if (typeof window !== 'undefined') {
     initSpeechRecognition();
+    initSpeechSynthesis();
   }
 
   async function deleteConversation(conversationId) {
@@ -698,6 +796,7 @@
     stopPollingForNewDoc();
     stopErrorPolling();
     stopListening();
+    stopSpeaking();
   });
 </script>
 
@@ -791,6 +890,29 @@
             </div>
           {/each}
         {/if}
+      </div>
+
+      <div class="chat-audio-controls">
+        <label class="audio-toggle">
+          <input
+            type="checkbox"
+            bind:checked={ttsEnabled}
+            disabled={!ttsSupported}
+          />
+          <span>
+            {ttsSupported
+              ? 'Lecture vocale automatique'
+              : 'Lecture vocale indisponible sur ce navigateur'}
+          </span>
+        </label>
+        <button
+          type="button"
+          class="stop-speech-btn"
+          on:click={stopSpeaking}
+          disabled={!speaking}
+        >
+          Couper la voix
+        </button>
       </div>
 
       <div class="chat-input">
@@ -1346,6 +1468,53 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+  }
+  
+  .chat-audio-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 16px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(59, 130, 246, 0.08);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+  }
+
+  .audio-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: clamp(11px, 1.4vw, 13px);
+    color: #e2e8f0;
+  }
+
+  .audio-toggle input {
+    width: 18px;
+    height: 18px;
+    accent-color: #3b82f6;
+  }
+
+  .stop-speech-btn {
+    background: rgba(239, 68, 68, 0.18);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #fecaca;
+    border-radius: 8px;
+    padding: 8px 14px;
+    cursor: pointer;
+    font-size: clamp(10px, 1.3vw, 12px);
+    transition: background 0.2s, transform 0.2s;
+  }
+
+  .stop-speech-btn:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.3);
+    transform: scale(1.02);
+  }
+
+  .stop-speech-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 
   .chat-input-wrapper {
