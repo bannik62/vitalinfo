@@ -120,8 +120,18 @@ export const loginRateLimit = async (req, res, next) => {
     const clientIP = getClientIP(req);
     const now = new Date();
 
-    // Chercher l'entrée existante
-    let blockedIp = await BlockedIp.findOne({ where: { ip: clientIP } });
+    // Chercher ou créer l'entrée
+    let [blockedIp] = await BlockedIp.findOrCreate({
+      where: { ip: clientIP },
+      defaults: {
+        ip: clientIP,
+        attempts: 0,
+        firstAttempt: now,
+        lastAttempt: now,
+        blocked: false,
+        blockedUntil: null
+      }
+    });
 
     // Si l'IP est bloquée
     if (blockedIp?.blocked) {
@@ -144,17 +154,7 @@ export const loginRateLimit = async (req, res, next) => {
       }
     }
 
-    // Créer l'entrée si elle n'existe pas encore
-    if (!blockedIp) {
-      blockedIp = await BlockedIp.create({
-        ip: clientIP,
-        attempts: 0,
-        firstAttempt: now,
-        lastAttempt: now,
-        blocked: false,
-        blockedUntil: null
-      });
-    } else if (now - new Date(blockedIp.firstAttempt) > WINDOW_MS && !blockedIp.blocked) {
+    if (now - new Date(blockedIp.firstAttempt) > WINDOW_MS && !blockedIp.blocked) {
       // Réinitialiser si la fenêtre est expirée
       await BlockedIp.update({
         attempts: 0,
@@ -246,30 +246,28 @@ export const incrementLoginAttempts = async (req) => {
     const clientIP = req.clientIP || getClientIP(req);
     const now = new Date();
     
-    let blockedIp = await BlockedIp.findOne({ where: { ip: clientIP } });
-
-    // Si l'entrée n'existe pas, la créer avec attempts: 0
-    if (!blockedIp) {
-      blockedIp = await BlockedIp.create({
+    let [blockedIp] = await BlockedIp.findOrCreate({
+      where: { ip: clientIP },
+      defaults: {
         ip: clientIP,
         attempts: 0,
         firstAttempt: now,
         lastAttempt: now,
         blocked: false,
         blockedUntil: null
-      });
-    } else {
-      // Si la fenêtre est expirée et non bloquée, réinitialiser
-      if (now - new Date(blockedIp.firstAttempt) > WINDOW_MS && !blockedIp.blocked) {
-        await BlockedIp.update({
-          attempts: 0,
-          firstAttempt: now,
-          lastAttempt: now,
-          blocked: false,
-          blockedUntil: null
-        }, { where: { ip: clientIP } });
-        blockedIp.attempts = 0;
       }
+    });
+
+    // Si la fenêtre est expirée et non bloquée, réinitialiser
+    if (now - new Date(blockedIp.firstAttempt) > WINDOW_MS && !blockedIp.blocked) {
+      await BlockedIp.update({
+        attempts: 0,
+        firstAttempt: now,
+        lastAttempt: now,
+        blocked: false,
+        blockedUntil: null
+      }, { where: { ip: clientIP } });
+      blockedIp.attempts = 0;
     }
 
     // Incrémenter le compteur (utiliser la valeur actuelle depuis la DB)
