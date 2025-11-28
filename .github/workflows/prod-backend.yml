@@ -54,4 +54,4 @@ jobs:
             sudo docker-compose stop backend
             sudo docker-compose rm -f backend
             sudo docker-compose build backend
-            sudo docker-compose --env-file .env up -d backend
+            sudo docker-compose --env-file .env up -d --no-deps backend
