@@ -1,3 +1,4 @@
+
 import { Sequelize } from 'sequelize';
 
 const env = process.env.NODE_ENV || 'development';
@@ -11,6 +12,15 @@ const dbConfig = {
   port: process.env.DB_PORT || 3306,
   dialect: 'mysql'
 };
+
+// Log pour debug
+console.log('DB Config:', {
+  username: dbConfig.username,
+  password: dbConfig.password ? '***' : 'UNDEFINED',
+  database: dbConfig.database,
+  host: dbConfig.host,
+  port: dbConfig.port
+});
 
 const sequelize = new Sequelize(
   dbConfig.database,

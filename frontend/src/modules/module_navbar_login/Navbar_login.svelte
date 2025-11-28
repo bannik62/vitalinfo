@@ -15,7 +15,7 @@
     top: 0;
     left: 0;
     width: 100%;
-    height: 15vh;
+    height: 10vh;
     display: flex;
     align-items: center;
     padding: 1.25rem 2rem;

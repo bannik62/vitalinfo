@@ -27,7 +27,7 @@
     <section>
       <h2>3. Protection des données personnelles</h2>
       <p>
-        Les données personnelles collectées sur ce site sont utilisées uniquement personnel et a un but personnel.
+        Les données personnelles collectées sur ce site sont des données personnelles et sont utilisées uniquement pour un but personnel.
       </p>
       <!-- <p>
         Conformément au RGPD, vous disposez d'un droit d'accès, de rectification, 
