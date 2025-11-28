@@ -49,3 +49,4 @@ const ChatConversation = sequelize.define('ChatConversation', {
 export default ChatConversation;
 export { sequelize };
 
+
