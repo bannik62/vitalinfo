@@ -295,6 +295,7 @@
         width: 100%;
     }
     .ia-agent-demo {
+        border:  #43C1FF 4px solid;
             margin: 1.5rem 0 1.5rem 0;
             background: linear-gradient(120deg, #837e92, #D5CFE8), #D5CFE8;
             border-radius: 8px;
