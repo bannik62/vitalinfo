@@ -312,7 +312,7 @@
             font-size:clamp(1.2rem, 9vw, 3.1rem); 
             color: #133751;
             font-weight: 700;
-            text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            text-shadow: 0 0 20px #43c0ffd4;
         }
         p {
             font-size:clamp(1.2rem, 9vw, 3.1rem); 

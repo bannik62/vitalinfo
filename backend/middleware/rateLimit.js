@@ -8,7 +8,6 @@ import { Op } from 'sequelize';
 // Configuration
 const MAX_ATTEMPTS = 5; // Nombre maximum de tentatives
 const WINDOW_MS = 15 * 60 * 1000; // 15 minutes en millisecondes
-const BLOCK_DURATION_MS = 15 * 60 * 1000; // Blocage de 15 minutes après dépassement
 
 /**
  * Nettoie les tentatives expirées (appelé périodiquement)
@@ -34,21 +33,7 @@ async function cleanExpiredAttempts() {
       }
     });
 
-    // Débloquer les entrées dont le blocage est expiré
-    await BlockedIp.update({
-      attempts: 0,
-      blocked: false,
-      blockedUntil: null,
-      firstAttempt: now,
-      lastAttempt: now
-    }, {
-      where: {
-        blocked: true,
-        blockedUntil: {
-          [Op.lt]: now
-        }
-      }
-    });
+    // Les IP bloquées restent bloquées indéfiniment
   } catch (error) {
     console.error('Erreur lors du nettoyage des tentatives expirées:', error);
     // Ne pas bloquer si le nettoyage échoue
@@ -135,23 +120,11 @@ export const loginRateLimit = async (req, res, next) => {
 
     // Si l'IP est bloquée
     if (blockedIp?.blocked) {
-      if (blockedIp.blockedUntil && now < new Date(blockedIp.blockedUntil)) {
-        const remainingMinutes = Math.ceil((new Date(blockedIp.blockedUntil) - now) / 60000);
-        return res.status(429).json({
-          error: `Trop de tentatives de connexion. Veuillez réessayer dans ${remainingMinutes} minute(s).`,
-          retryAfter: Math.ceil((new Date(blockedIp.blockedUntil) - now) / 1000)
-        });
-      } else {
-        // Débloquer si la période est expirée mais conserver l'historique
-        await BlockedIp.update({
-          blocked: false,
-          blockedUntil: null,
-          attempts: 0,
-          firstAttempt: now,
-          lastAttempt: now
-        }, { where: { ip: clientIP } });
-        blockedIp = await BlockedIp.findOne({ where: { ip: clientIP } });
-      }
+      return res.status(429).json({
+        error: 'Trop de tentatives de connexion. Cette adresse IP est désormais bloquée définitivement.',
+        retryAfter: null,
+        blocked: true
+      });
     }
 
     if (now - new Date(blockedIp.firstAttempt) > WINDOW_MS && !blockedIp.blocked) {
@@ -168,24 +141,23 @@ export const loginRateLimit = async (req, res, next) => {
 
     // Vérifier si on a atteint le maximum (avant d'incrémenter)
     if (blockedIp.attempts >= MAX_ATTEMPTS) {
-      const blockedUntil = new Date(now.getTime() + BLOCK_DURATION_MS);
       await BlockedIp.update(
         {
           blocked: true,
-          blockedUntil: blockedUntil
+          blockedUntil: null
         },
         { where: { ip: clientIP } }
       );
 
       return res.status(429).json({
-        error: `Trop de tentatives de connexion. Compte bloqué pendant ${BLOCK_DURATION_MS / 60000} minutes.`,
-        retryAfter: BLOCK_DURATION_MS / 1000,
+        error: 'Trop de tentatives de connexion. Cette adresse IP est désormais bloquée définitivement.',
+        retryAfter: null,
         attemptsInfo: {
           attempts: MAX_ATTEMPTS,
           remaining: 0,
           blocked: true,
-          blockedUntil: blockedUntil,
-          remainingMinutes: Math.ceil(BLOCK_DURATION_MS / 60000)
+          blockedUntil: null,
+          permanent: true
         }
       });
     }
@@ -275,14 +247,14 @@ export const incrementLoginAttempts = async (req) => {
     const newAttempts = currentAttempts + 1;
     const updateData = {
       attempts: newAttempts,
-      lastAttempt: now
+      lastAttempt: now,
+      blockedUntil: null
     };
 
     // Si on a atteint le maximum de tentatives
     if (newAttempts >= MAX_ATTEMPTS) {
-      const blockedUntil = new Date(now.getTime() + BLOCK_DURATION_MS);
       updateData.blocked = true;
-      updateData.blockedUntil = blockedUntil;
+      updateData.blockedUntil = null;
     }
 
     await BlockedIp.update(updateData, { where: { ip: clientIP } });
@@ -341,31 +313,14 @@ export const getLoginAttemptsInfo = async (req) => {
     }
 
     // Si bloqué
-    if (blockedIp.blocked && blockedIp.blockedUntil) {
-      if (now < new Date(blockedIp.blockedUntil)) {
-        return {
-          attempts: MAX_ATTEMPTS,
-          remaining: 0,
-          blocked: true,
-          blockedUntil: blockedIp.blockedUntil,
-          remainingMinutes: Math.ceil((new Date(blockedIp.blockedUntil) - now) / 60000)
-        };
-      } else {
-        // Débloquer
-        await BlockedIp.update({
-          attempts: 0,
-          blocked: false,
-          blockedUntil: null,
-          firstAttempt: now,
-          lastAttempt: now
-        }, { where: { ip: clientIP } });
-        return {
-          attempts: 0,
-          remaining: MAX_ATTEMPTS,
-          blocked: false,
-          blockedUntil: null
-        };
-      }
+    if (blockedIp.blocked) {
+      return {
+        attempts: MAX_ATTEMPTS,
+        remaining: 0,
+        blocked: true,
+        blockedUntil: null,
+        permanent: true
+      };
     }
 
     return {
