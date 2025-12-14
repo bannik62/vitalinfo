@@ -11,36 +11,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Configuration pour récupérer la vraie IP du client (important avec Docker/reverse proxy)
-app.set('trust proxy', true);
-
 // Middleware
-const DEFAULT_ALLOWED_ORIGINS = [
-  // Dev
-  'http://localhost:5173',
-  // Prod
-  'https://vitalinfo.site',
-  'https://www.vitalinfo.site'
-];
-const envAllowedOrigins = (process.env.ALLOWED_ORIGINS || '')
-  .split(',')
-  .map(origin => origin.trim())
-  .filter(Boolean);
-const allowedOrigins = envAllowedOrigins.length > 0 ? envAllowedOrigins : DEFAULT_ALLOWED_ORIGINS;
-
 app.use(cors({
-  origin: (origin, callback) => {
-    // Autoriser les requêtes sans header Origin (ex: curl, health checks)
-    if (!origin) {
-      return callback(null, true);
-    }
-
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-
-    return callback(new Error(`Origin ${origin} not allowed by CORS`));
-  },
+  origin: 'http://localhost:5173',
   credentials: true
 }));
 app.use(cookieParser());
