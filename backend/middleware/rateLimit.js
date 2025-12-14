@@ -7,7 +7,8 @@ import { Op } from 'sequelize';
 
 // Configuration
 const MAX_ATTEMPTS = 5; // Nombre maximum de tentatives
-const WINDOW_MS = 15 * 60 * 1000; // 15 minutes en millisecondes
+const WINDOW_MS = 1 * 60 * 1000; // 1 minute en millisecondes
+const COOLDOWN_MS = 5 * 1000; // Délai minimum entre deux tentatives (5s)
 
 /**
  * Nettoie les tentatives expirées (appelé périodiquement)
@@ -137,6 +138,21 @@ export const loginRateLimit = async (req, res, next) => {
         blockedUntil: null
       }, { where: { ip: clientIP } });
       blockedIp = await BlockedIp.findOne({ where: { ip: clientIP } });
+    }
+
+    // Délai minimum entre deux tentatives pour éviter le spam rapide
+    if (blockedIp.attempts > 0 && blockedIp.lastAttempt) {
+      const sinceLastAttempt = now - new Date(blockedIp.lastAttempt);
+      if (sinceLastAttempt < COOLDOWN_MS) {
+        const retryAfterMs = COOLDOWN_MS - sinceLastAttempt;
+        return res.status(429).json({
+          error: 'Veuillez patienter quelques secondes avant une nouvelle tentative.',
+          retryAfterMs,
+          retryAfterSeconds: Math.ceil(retryAfterMs / 1000),
+          blocked: false,
+          cooldown: true
+        });
+      }
     }
 
     // Vérifier si on a atteint le maximum (avant d'incrémenter)
