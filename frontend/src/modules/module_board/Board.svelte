@@ -13,6 +13,7 @@
   let uploadLoading = false;
   let uploadMessage = '';
   let uploadMessageType = '';
+  let lastSuccessMessage = ''; // Placeholder pour un message de succès futur
   let fileInput;
 
   // Chat
@@ -835,7 +836,7 @@
 <div class="board-container">
   <div class="board-columns">
     <section class="board-card upload-card">
-      <h2>Envoyer un document à n8n</h2>
+      <h2>Envoyer un document à l'agent </h2>
       {#if uploadMessage}
         <div class="message message-{uploadMessageType}">
           {uploadMessage}
@@ -869,6 +870,37 @@
       <p class="helper-text">
         Le document sera analysé par n8n (extraction, agent IA, stockage Supabase).
       </p>
+
+      <div class="upload-status-panel">
+        <div class="status-header">
+          <h3>Retour n8n</h3>
+          <span class={`status-pill ${currentError ? 'error' : lastSuccessMessage ? 'success' : 'idle'}`}>
+            {currentError ? 'Erreur' : lastSuccessMessage ? 'OK' : 'En attente'}
+          </span>
+        </div>
+
+        {#if currentError}
+          <div class="status-message error">
+            <div class="status-title">Erreur détectée</div>
+            <p class="status-text">{currentError.errorMessage || 'Erreur inconnue'}</p>
+            {#if currentError.errorDescription}
+              <p class="status-meta">{currentError.errorDescription}</p>
+            {/if}
+            {#if currentError.n8nDetails?.nodeName}
+              <p class="status-meta">Nœud : {currentError.n8nDetails.nodeName}</p>
+            {/if}
+          </div>
+        {:else if lastSuccessMessage}
+          <div class="status-message success">
+            <div class="status-title">Traitement OK</div>
+            <p class="status-text">{lastSuccessMessage}</p>
+          </div>
+        {:else}
+          <div class="status-message idle">
+            <p class="status-text">En attente d'un retour de n8n.</p>
+          </div>
+        {/if}
+      </div>
     </section>
 
     <section class="board-card chat-card">
@@ -1370,6 +1402,9 @@
 
   .upload-card {
     flex: 0.9;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
   }
 
   .chat-card {
@@ -1432,6 +1467,103 @@
     font-size: clamp(12px, 1.5vw, 14px);
     color: rgba(226, 232, 240, 0.7);
     text-align: center;
+  }
+
+  .upload-status-panel {
+    margin-top: auto;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    background: rgba(15, 23, 42, 0.35);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .status-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .status-header h3 {
+    margin: 0;
+    font-size: clamp(14px, 1.8vw, 16px);
+    color: #e2e8f0;
+  }
+
+  .status-pill {
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: clamp(12px, 1.4vw, 13px);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    color: #e2e8f0;
+  }
+
+  .status-pill.error {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.45);
+    color: #fecaca;
+  }
+
+  .status-pill.success {
+    background: rgba(34, 197, 94, 0.15);
+    border-color: rgba(34, 197, 94, 0.45);
+    color: #dcfce7;
+  }
+
+  .status-pill.idle {
+    background: rgba(148, 163, 184, 0.12);
+    border-color: rgba(148, 163, 184, 0.35);
+    color: #e2e8f0;
+  }
+
+  .status-message {
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    background: rgba(7, 11, 20, 0.7);
+    max-height: 200px;
+    overflow: auto;
+  }
+
+  .status-message.error {
+    border-color: rgba(239, 68, 68, 0.45);
+    background: rgba(239, 68, 68, 0.08);
+  }
+
+  .status-message.success {
+    border-color: rgba(34, 197, 94, 0.45);
+    background: rgba(34, 197, 94, 0.08);
+  }
+
+  .status-message.idle {
+    border-color: rgba(148, 163, 184, 0.35);
+    background: rgba(148, 163, 184, 0.08);
+  }
+
+  .status-title {
+    margin: 0 0 6px;
+    font-weight: 700;
+    color: #f8fafc;
+    font-size: clamp(13px, 1.6vw, 15px);
+  }
+
+  .status-text {
+    margin: 0;
+    color: rgba(226, 232, 240, 0.85);
+    font-size: clamp(12px, 1.5vw, 14px);
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .status-meta {
+    margin: 6px 0 0;
+    color: rgba(226, 232, 240, 0.75);
+    font-size: clamp(11px, 1.3vw, 13px);
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
 
   .submit-btn {
