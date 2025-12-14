@@ -15,10 +15,18 @@ const PORT = process.env.PORT || 3000;
 app.set('trust proxy', true);
 
 // Middleware
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173')
+const DEFAULT_ALLOWED_ORIGINS = [
+  // Dev
+  'http://localhost:5173',
+  // Prod
+  'https://vitalinfo.site',
+  'https://www.vitalinfo.site'
+];
+const envAllowedOrigins = (process.env.ALLOWED_ORIGINS || '')
   .split(',')
   .map(origin => origin.trim())
   .filter(Boolean);
+const allowedOrigins = envAllowedOrigins.length > 0 ? envAllowedOrigins : DEFAULT_ALLOWED_ORIGINS;
 
 app.use(cors({
   origin: (origin, callback) => {
