@@ -311,6 +311,51 @@ router.post('/errors', assertN8NSecret, (req, res) => {
   return res.json({ success: true, message: 'Erreur enregistrée' });
 });
 
+// Nouveau endpoint pour le Error Trigger n8n
+router.post('/report_n8n', assertN8NSecret, (req, res) => {
+  console.log('🔴 Route /report_n8n appelée');
+  console.log('🔴 Payload brut:', JSON.stringify(req.body, null, 2));
+
+  const payload = req.body;
+  if (!Array.isArray(payload) || payload.length === 0) {
+    return res.status(400).json({ error: 'Payload attendu: tableau non vide.' });
+  }
+
+  let storedCount = 0;
+  payload.forEach((entry, index) => {
+    const execution = entry?.execution || {};
+    const workflow = entry?.workflow || {};
+    const errorInfo = execution.error || {};
+
+    const userId = entry?.userId || 'global';
+    const timestamp = new Date().toISOString();
+
+    const newError = {
+      errorMessage: errorInfo.message || 'Erreur n8n reçue',
+      errorDescription: workflow.name ? `Workflow: ${workflow.name}` : undefined,
+      n8nDetails: {
+        nodeName: execution.lastNodeExecuted || workflow.lastNodeExecuted,
+        workflowName: workflow.name,
+        executionId: execution.id
+      },
+      timestamp,
+      id: Date.now() + index // ID simple
+    };
+
+    const userErrors = errorStore.get(userId) || [];
+    const updatedErrors = [newError, ...userErrors].slice(0, 5);
+    errorStore.set(userId, updatedErrors);
+    storedCount += 1;
+
+    console.error('❌ ERREUR N8N REPORT:', {
+      userId,
+      ...newError
+    });
+  });
+
+  return res.json({ success: true, stored: storedCount });
+});
+
 router.get('/agent/errors/latest', authenticateToken, (req, res) => {
   const userId = req.user?.id || 'global';
   const errors = errorStore.get(userId) || [];

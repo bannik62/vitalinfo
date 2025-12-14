@@ -203,24 +203,17 @@ export const resetLoginAttempts = async (req) => {
   try {
     const clientIP = req.clientIP || getClientIP(req);
     const now = new Date();
-    const [updatedCount] = await BlockedIp.update({
+    // Utiliser upsert pour éviter les erreurs de clé unique en cas de course
+    await BlockedIp.upsert({
+      ip: clientIP,
       attempts: 0,
       blocked: false,
       blockedUntil: null,
       firstAttempt: now,
-      lastAttempt: now
-    }, { where: { ip: clientIP } });
-
-    if (updatedCount === 0) {
-      await BlockedIp.create({
-        ip: clientIP,
-        attempts: 0,
-        firstAttempt: now,
-        lastAttempt: now,
-        blocked: false,
-        blockedUntil: null
-      });
-    }
+      lastAttempt: now,
+      updatedAt: now,
+      createdAt: now
+    });
   } catch (error) {
     console.error('Erreur lors de la réinitialisation des tentatives:', error);
   }
