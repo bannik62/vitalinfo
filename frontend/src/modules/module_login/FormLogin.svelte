@@ -532,7 +532,7 @@
     border: 1px solid rgba(91, 211, 255, 0.08);
     backdrop-filter: blur(6px);
     box-shadow: inset 0 0 35px rgba(0, 140, 255, 0.08);
-    z-index: 5;
+    z-index: 1;
     }
 
     .login-form__badge {
