@@ -103,7 +103,7 @@
 <div class=" container-login-form-description">
    
     <div class="container-login-form-description-text">
-        <p class="italiana-regular">Connexion à Vitalinfo</p>
+        <!-- <p class="italiana-regular">Connexion à Vitalinfo</p> -->
     <div class="ia-agent-demo">
         <h3 class="italiana_regular_sans_serif">  l’agent IA administratif</h3>
         <ul>
@@ -158,7 +158,7 @@
             <div class="electric-card__background"></div>
 
             <div class="electric-card__content">
-                <div class="login-form__badge">Vitalinfo Agent IA</div>
+                <div class="login-form__badge">Vitalinfo Agent</div>
                 <div class="robot-login" role="img" aria-label="robot_login" title="robot_login">
                     <img 
                         src="/robot_login.png" 
@@ -276,15 +276,6 @@
         border-radius: 12px;
         box-shadow: -10px 10px 66px rgba(79, 99, 130, 0.7) inset
     }
-    .container-login-form-description p {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    color: #133751;
-    font-size: clamp(30px, 3.5vw, 300px);
-    
-}
 
 
     .container-login-form-description-text {
@@ -293,17 +284,19 @@
         margin-bottom: 20px;
         color: #333;
         width: 100%;
+        padding: 4%;
     }
     .ia-agent-demo {
         border:  #43C1FF 4px solid;
             margin: 1.5rem 0 1.5rem 0;
             background: linear-gradient(120deg, #837e92, #D5CFE8), #D5CFE8;
-            border-radius: 8px;
+            border-radius: 15px;
             padding: 1.2rem 1rem;
             line-height: 1.5;
             color: #133751;
             width: 100%;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.5) inset;
+            padding: 5%;
         }
 
    
@@ -314,9 +307,7 @@
             font-weight: 700;
             text-shadow: 0 0 20px #43c0ffd4;
         }
-        p {
-            font-size:clamp(1.2rem, 9vw, 3.1rem); 
-        }
+  
         .ia-agent-demo ul {
             margin: 0.3em 0 0.6em 1.2em;
             padding: 0;
@@ -379,7 +370,7 @@
     .login-form {
         width: 100%;
         max-width: 420px;
-        margin-top: 50px;
+        margin-top: 0px;
         position: relative;
     }
 
@@ -779,6 +770,7 @@
             color: #133751;
             width: 100%;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.5) inset;
+            padding: 2%;
         }
     }
   
