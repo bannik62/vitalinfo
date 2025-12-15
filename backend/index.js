@@ -11,9 +11,28 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
+// Récupérer la vraie IP derrière un proxy/reverse proxy
+app.set('trust proxy', true);
+
+// CORS : accepte localhost (dev) et domaine prod par défaut,
+// et permet d'ajouter d'autres origines via ALLOWED_ORIGINS (séparées par des virgules).
+const DEFAULT_ALLOWED_ORIGINS = [
+  'http://localhost:5173',
+  'https://vitalinfo.site',
+  'https://www.vitalinfo.site'
+];
+const envAllowedOrigins = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map(o => o.trim())
+  .filter(Boolean);
+const allowedOrigins = envAllowedOrigins.length > 0 ? envAllowedOrigins : DEFAULT_ALLOWED_ORIGINS;
+
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true); // requêtes sans Origin (curl, healthcheck)
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error(`Origin ${origin} not allowed by CORS`));
+  },
   credentials: true
 }));
 app.use(cookieParser());
