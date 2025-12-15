@@ -26,7 +26,7 @@
 
   .navbar-login__logo {
     position: relative;
-    top: 120%;
+    top: 150%;
     left: 5%;
     transform: translate(-50%, -50%);
     display: inline;
