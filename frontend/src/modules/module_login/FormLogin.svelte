@@ -540,11 +540,11 @@
         padding: 0.75rem 1rem;
         border-radius: 12px;
         text-transform: uppercase;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.5em;
         font-size: 0.9rem;
         font-weight: 600;
         color: #e5f6ff;
-        border: 1px solid rgba(91, 211, 255, 0.6);
+        border: 2px solid rgba(91, 211, 255, 0.6);
         background: linear-gradient(
             120deg,
             rgba(91, 211, 255, 0.2),
