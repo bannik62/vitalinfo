@@ -5,7 +5,6 @@ import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.js';
 import boardRoutes from './routes/board.js';
 import agentRoutes from './routes/agent.js';
-import securityRoutes from './routes/security.js';
 
 dotenv.config();
 
@@ -44,7 +43,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/board', boardRoutes);
 app.use('/api', agentRoutes);
-app.use('/api/security', securityRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Backend is running' });

@@ -4,17 +4,14 @@
   import PageLogin from './pages/login/Login.svelte';
   import Board from './modules/module_board/Board.svelte';
   import MentionsLegales from './pages/MentionsLegales.svelte';
-  import Security from './pages/admin/Security.svelte';
   
   let isAuthenticated = false;
   let loading = true;
   let showMentionsLegales = false;
-  let showSecurity = false;
 
   function checkHash() {
     if (typeof window !== 'undefined') {
       showMentionsLegales = window.location.hash === '#mentions-legales';
-      showSecurity = window.location.hash === '#security';
     }
   }
 
@@ -57,12 +54,6 @@
   <div class="loading">Chargement...</div>
   {:else if showMentionsLegales}
     <MentionsLegales />
-  {:else if showSecurity}
-    {#if isAuthenticated}
-      <Security />
-    {:else}
-      <PageLogin />
-    {/if}
   {:else}
     <main>
       {#if isAuthenticated}
