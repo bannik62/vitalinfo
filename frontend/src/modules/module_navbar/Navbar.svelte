@@ -3,29 +3,42 @@
   import axios from 'axios';
 
   let user = null;
+  let isAdmin = false;
 
-  // (Optionnel) Récupérer l'utilisateur connecté si besoin
+  // Récupérer l'utilisateur connecté
   onMount(async () => {
-    // Ajoutez ici la logique pour récupérer le profil si besoin
-    // Par exemple avec un appel API /api/auth/me
-    // user = await api.get('/api/auth/me');
+    try {
+      const response = await axios.get('/api/auth/verify', {
+        withCredentials: true
+      });
+      user = response.data.user;
+      isAdmin = user?.role === 'admin';
+    } catch (err) {
+      console.log('Utilisateur non authentifié');
+    }
   });
 
   // Déconnexion
   async function logout() {
     try {
-      // Appel à un endpoint de déconnexion si présent, sinon on supprime juste le cookie côté client
       await axios.post('/api/auth/logout', {}, {
         withCredentials: true
       });
-      // Redirection après déconnexion
-      window.location.href = '/login';
+      window.location.href = '/';
     } catch (err) {
-      // Même si erreur, on redirige
-      window.location.href = '/login';
+      window.location.href = '/';
     }
   }
 
+  // Navigation vers le dashboard sécurité
+  function goToSecurity() {
+    window.location.hash = '#security';
+  }
+
+  // Navigation vers le board principal
+  function goToBoard() {
+    window.location.hash = '';
+  }
 
 </script>
 
@@ -41,6 +54,7 @@
   .navbar-buttons {
     display: flex;
     gap: 1rem;
+    flex-wrap: wrap;
   }
   .navbar-button {
     background: #fff2;
@@ -55,10 +69,35 @@
   .navbar-button:hover {
     background: #fff4;
   }
+  .navbar-button-security {
+    background: #e74c3c;
+  }
+  .navbar-button-security:hover {
+    background: #c0392b;
+  }
   .navbar-title {
     font-weight: bold;
     font-size: 1.35rem;
     letter-spacing: 1px;
+  }
+  
+  @media (max-width: 768px) {
+    nav.navbar {
+      padding: 0.8rem 1rem;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .navbar-title {
+      font-size: 1.1rem;
+    }
+    .navbar-buttons {
+      width: 100%;
+      justify-content: center;
+    }
+    .navbar-button {
+      font-size: 0.9rem;
+      padding: 0.4rem 1rem;
+    }
   }
 </style>
 
@@ -67,6 +106,13 @@
     VitalInfo
   </div>
   <div class="navbar-buttons">
+    <button class="navbar-button" on:click={goToBoard}>📋 Dashboard</button>
+    {#if isAdmin}
+      <button class="navbar-button navbar-button-security" on:click={goToSecurity}>
+        🛡️ Sécurité
+      </button>
+    {/if}
     <button class="navbar-button" on:click={logout}>Se déconnecter</button>
   </div>
 </nav>
+
