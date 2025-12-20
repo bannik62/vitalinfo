@@ -5,6 +5,7 @@ import User from '../models/User.mjs';
 import csrfProtection, { csrfTokenGenerator } from '../middleware/csrf.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { loginRateLimit, resetLoginAttempts, getLoginAttemptsInfo, incrementLoginAttempts } from '../middleware/rateLimit.js';
+import { logSecurityEvent, getClientIP } from '../utils/securityLogger.js';
 
 const router = express.Router();
 const JWT_SECRET = 'vitalinfo-jwt-secret-key-2024';
@@ -55,6 +56,17 @@ router.post('/login', csrfProtection, loginRateLimit, async (req, res) => {
     // Validation et sanitization
     const validation = validateAndSanitizeLogin(email, password);
     if (!validation.valid) {
+      // 🔍 Log tentative avec données invalides
+      await logSecurityEvent({
+        type: 'LOGIN_ATTEMPT_INVALID_DATA',
+        severity: 'INFO',
+        ip: getClientIP(req),
+        email: email?.substring(0, 255),
+        reason: validation.error,
+        userAgent: req.headers['user-agent'],
+        path: req.path
+      });
+      
       return res.status(400).json({ error: validation.error });
     }
 
@@ -67,6 +79,19 @@ router.post('/login', csrfProtection, loginRateLimit, async (req, res) => {
     if (!user) {
       await incrementLoginAttempts(req);
       const attemptsInfo = await getLoginAttemptsInfo(req);
+      
+      // 🔍 Log tentative sur compte inexistant
+      await logSecurityEvent({
+        type: 'LOGIN_FAILED',
+        severity: 'WARNING',
+        ip: getClientIP(req),
+        email: sanitizedEmail,
+        reason: 'USER_NOT_FOUND',
+        userAgent: req.headers['user-agent'],
+        path: req.path,
+        metadata: { attemptsInfo }
+      });
+      
       return res.status(401).json({ 
         error: 'Email ou mot de passe incorrect',
         attemptsInfo 
@@ -79,6 +104,19 @@ router.post('/login', csrfProtection, loginRateLimit, async (req, res) => {
     if (!isValidPassword) {
       await incrementLoginAttempts(req);
       const attemptsInfo = await getLoginAttemptsInfo(req);
+      
+      // 🔍 Log mauvais mot de passe
+      await logSecurityEvent({
+        type: 'LOGIN_FAILED',
+        severity: 'WARNING',
+        ip: getClientIP(req),
+        email: sanitizedEmail,
+        reason: 'INVALID_PASSWORD',
+        userAgent: req.headers['user-agent'],
+        path: req.path,
+        metadata: { userId: user.id, attemptsInfo }
+      });
+      
       return res.status(401).json({ 
         error: 'Email ou mot de passe incorrect',
         attemptsInfo 
@@ -107,6 +145,17 @@ router.post('/login', csrfProtection, loginRateLimit, async (req, res) => {
     // Réinitialiser les tentatives après connexion réussie
     await resetLoginAttempts(req);
 
+    // 🔍 Log connexion réussie
+    await logSecurityEvent({
+      type: 'LOGIN_SUCCESS',
+      severity: 'INFO',
+      ip: getClientIP(req),
+      email: sanitizedEmail,
+      userAgent: req.headers['user-agent'],
+      path: req.path,
+      metadata: { userId: user.id, role: user.role }
+    });
+
     res.json({ 
       success: true,
       user: {
@@ -117,6 +166,16 @@ router.post('/login', csrfProtection, loginRateLimit, async (req, res) => {
       }
     });
   } catch (error) {
+    // 🔍 Log erreur serveur
+    await logSecurityEvent({
+      type: 'LOGIN_ERROR',
+      severity: 'CRITICAL',
+      ip: getClientIP(req),
+      reason: error.message,
+      path: req.path,
+      metadata: { stack: error.stack }
+    });
+    
     console.error('Erreur lors de la connexion:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
