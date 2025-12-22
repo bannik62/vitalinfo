@@ -17,6 +17,7 @@ jobs:
           host: ${{ secrets.VPS_HOST_VITALINFO }}
           username: ${{ secrets.PROD_SERVER_USER_VITALINFO }}
           key: ${{ secrets.DEPLOY_SSH_KEY_NO_PHRASE_VITALINFO }}
+          port: 2222
           script: |
             mkdir -p "${{ secrets.DEPLOY_PATH_VITALINFO }}/backend"
 
@@ -26,7 +27,7 @@ jobs:
           host: ${{ secrets.VPS_HOST_VITALINFO }}
           username: ${{ secrets.PROD_SERVER_USER_VITALINFO }}
           key: ${{ secrets.DEPLOY_SSH_KEY_NO_PHRASE_VITALINFO }}
-          port: 22
+          port: 2222
           source: "backend/**"
           target: "${{ secrets.DEPLOY_PATH_VITALINFO }}/backend"
           strip_components: 1
@@ -38,7 +39,7 @@ jobs:
           host: ${{ secrets.VPS_HOST_VITALINFO }}
           username: ${{ secrets.PROD_SERVER_USER_VITALINFO }}
           key: ${{ secrets.DEPLOY_SSH_KEY_NO_PHRASE_VITALINFO }}
-          port: 22
+          port: 2222
           source: "docker-compose.yml"
           target: "${{ secrets.DEPLOY_PATH_VITALINFO }}"
           rm: false
@@ -49,6 +50,7 @@ jobs:
           host: ${{ secrets.VPS_HOST_VITALINFO }}
           username: ${{ secrets.PROD_SERVER_USER_VITALINFO }}
           key: ${{ secrets.DEPLOY_SSH_KEY_NO_PHRASE_VITALINFO }}
+          port: 2222
           script: |
             cd "${{ secrets.DEPLOY_PATH_VITALINFO }}"
             sudo docker-compose stop backend

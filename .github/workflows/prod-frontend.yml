@@ -26,6 +26,7 @@ jobs:
           host: ${{ secrets.VPS_HOST_VITALINFO }}
           username: ${{ secrets.PROD_SERVER_USER_VITALINFO }}
           key: ${{ secrets.DEPLOY_SSH_KEY_NO_PHRASE_VITALINFO }}
+          port: 2222
           script: |
             mkdir -p "${{ secrets.DEPLOY_PATH_VITALINFO }}/frontend"
 
@@ -35,7 +36,7 @@ jobs:
           host: ${{ secrets.VPS_HOST_VITALINFO }}
           username: ${{ secrets.PROD_SERVER_USER_VITALINFO }}
           key: ${{ secrets.DEPLOY_SSH_KEY_NO_PHRASE_VITALINFO }}
-          port: 22
+          port: 2222
           source: "frontend/dist/**"
           target: "${{ secrets.DEPLOY_PATH_VITALINFO }}/frontend"
           strip_components: 2
