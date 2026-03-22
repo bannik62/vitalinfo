@@ -25,3 +25,4 @@ echo "2. Ajouter le logging dans /routes/auth.js (voir GUIDE_MONITORING.md)"
 echo "3. Accéder à l'interface : https://vitalinfo.site/#security"
 echo ""
 
+

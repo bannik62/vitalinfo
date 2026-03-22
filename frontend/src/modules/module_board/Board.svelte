@@ -2,6 +2,7 @@
   import { onDestroy, afterUpdate } from 'svelte';
   import { SvelteMap } from 'svelte/reactivity';
   import axios from 'axios';
+  import { getSupabaseOrigin } from '../../lib/env.js';
   import Securecsrf from '../security/module_csrf/Securecsrf.svelte';
   import Navbar from '../module_navbar/Navbar.svelte';
 
@@ -504,7 +505,7 @@
       if (bucket && key) {
         // Si key commence déjà par bucket/, utiliser key directement, sinon ajouter bucket/
         const path = key.startsWith(`${bucket}/`) ? key : `${bucket}/${key}`;
-        clone.binary_reference.publicUrl = `https://zuvzpcfrbheqeqbiottv.supabase.co/storage/v1/object/public/${path}`;
+        clone.binary_reference.publicUrl = `${getSupabaseOrigin()}/storage/v1/object/public/${path}`;
       }
     }
 

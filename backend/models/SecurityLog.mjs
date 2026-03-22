@@ -64,3 +64,4 @@ const SecurityLog = sequelize.define('SecurityLog', {
 
 export default SecurityLog;
 
+

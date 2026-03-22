@@ -184,3 +184,4 @@ ${stats.csrfAttacks > 0 ? '🔥 ALERTE : Attaques CSRF détectées !' : '✅ Auc
   }
 }
 
+
