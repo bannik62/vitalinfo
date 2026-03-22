@@ -149,3 +149,4 @@ Vous pouvez :
 
 Tout est prêt ! Il suffit d'exécuter `npx sequelize-cli db:migrate` avant de push ! 🚀
 
+
